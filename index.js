@@ -2,7 +2,6 @@ var request = require("request");
 var inherits = require('util').inherits;
 var Service, Characteristic;
 var devices = [];
-var blueairparams = {};
 
 module.exports = function(homebridge) {
   Service = homebridge.hap.Service;
@@ -16,7 +15,6 @@ module.exports = function(homebridge) {
     this.username = config.username;
     this.apikey = config.apikey;
     this.password = config.password;
-    this.homehost = '';
     this.name = config.name || 'Air Purifier';
     this.showAirQuality = config.showAirQuality || false;
     this.showTemperature = config.showTemperature || false;
@@ -178,7 +176,7 @@ inherits(BlueAir.PowerService, Service);
 BlueAir.prototype = {
 
   getHomehost: function(callback) {
-    //Build the auth request
+    //Build the request
     var options = {
       url: this.base_API_url,
       method: 'get',
@@ -202,31 +200,30 @@ BlueAir.prototype = {
   },
 
   login: function() {
-    //Build the auth request
+    //Build the request and use returned value
     this.getHomehost(function(homehost){
-        var options = {
-            url: 'https://' + homehost + '/v2/user/' + this.username + '/login/',
-            method: 'get',
-            headers: {
-                'X-API-KEY-TOKEN': this.apikey,
-                'Authorization': 'Basic ' + Buffer.from(this.username + ':' + this.password).toString('base64')
-            }
-        };
-        console.log(options);
+      var options = {
+        url: 'https://' + homehost + '/v2/user/' + this.username + '/login/',
+        method: 'get',
+        headers: {
+          'X-API-KEY-TOKEN': this.apikey,
+          'Authorization': 'Basic ' + Buffer.from(this.username + ':' + this.password).toString('base64')
+        }
+      };
         //Send request
         request(options, function(error, response, body) {
-            if (error) {
-                console.log('HTTP function failed: %s', error);
-                return(error);
-            }
-            else {
-                var json = JSON.parse(body);
-                console.log('Logged in:', json);
-                console.log('Auth token:', response.headers);
-                return(json);
-            }
+          if (error) {
+            this.log('HTTP function failed: %s', error);
+            return(error);
+          }
+          else {
+            var json = JSON.parse(body);
+            this.log('Logged in:', json);
+            this.log('Auth token:', response.headers['x-auth-token']);
+            return(json);
+          }
         }.bind(this))
-    });
+      }.bind(this));
   },
 
   getConsumption: function(callback) {
