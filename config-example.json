@@ -1,0 +1,10 @@
+  {
+    "accessory": "BlueAir",
+    "name": "Air Purifier",
+    "username": "{BlueAir-Email}",
+    "apikey": "{BlueAir-API-Key-Here}",
+    "password": "{BlueAir-Password}",
+    "showTemperature": true,
+    "showHumidity": true,
+    "showAirQuality": true
+  }
