@@ -1,0 +1,24 @@
+{
+  "name": "homebridge-blueair",
+  "version": "0.0.1",
+  "description": "BlueAir plugin for homebridge: https://github.com/nfarina/homebridge",
+  "license": "ISC",
+  "keywords": [
+    "homebridge-plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mylesgray/homebridge-blueair.git"
+  },
+  "bugs": {
+    "url": "http://github.com/mylesgray/homebridge-blueair/issues"
+  },
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.3.1"
+  },
+  "dependencies": {
+    "request": "^2.69.0",
+    "util": ">= 0.10.3"
+  }
+}
