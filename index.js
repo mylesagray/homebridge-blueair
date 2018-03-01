@@ -177,7 +177,7 @@ inherits(BlueAir.PowerService, Service);
 
 BlueAir.prototype = {
 
-  getHomehost: function() {
+  getHomehost: function(callback) {
     //Build the auth request
     var options = {
       url: this.base_API_url,
@@ -191,42 +191,42 @@ BlueAir.prototype = {
     request.get(options, function(error, response, body) {
       if (error) {
         this.log('HTTP function failed: %s', error);
-        return(error);
+        callback(error);
       }
       else {
         var json = JSON.parse(body);
         this.log('Homehost:', json);
-        return(json);
+        callback(json);
       }
     }.bind(this));
   },
 
   login: function() {
     //Build the auth request
-    homehost = this.getHomehost();
-    var options = {
-      url: 'https://' + homehost + '/v2/user/' + this.username + '/login/',
-      method: 'get',
-      headers: {
-        'X-API-KEY-TOKEN': this.apikey,
-        'Authorization': 'Basic ' + Buffer.from(this.username + ':' + this.password).toString('base64')
-      }
-    };
-    console.log(options);
-
-    //Send request
-    request(options, function(error, response, body) {
-      if (error) {
-        this.log('HTTP function failed: %s', error);
-        return(error);
-      }
-      else {
-        var json = JSON.parse(body);
-        this.log('Logged in:', json);
-        this.log('Auth token:', response.headers);
-        return(json);
-      }
-    }.bind(this))
+    this.getHomehost(function(homehost){
+        var options = {
+            url: 'https://' + homehost + '/v2/user/' + this.username + '/login/',
+            method: 'get',
+            headers: {
+                'X-API-KEY-TOKEN': this.apikey,
+                'Authorization': 'Basic ' + Buffer.from(this.username + ':' + this.password).toString('base64')
+            }
+        };
+        console.log(options);
+        //Send request
+        request(options, function(error, response, body) {
+            if (error) {
+                console.log('HTTP function failed: %s', error);
+                return(error);
+            }
+            else {
+                var json = JSON.parse(body);
+                console.log('Logged in:', json);
+                console.log('Auth token:', response.headers);
+                return(json);
+            }
+        }.bind(this))
+    });
   },
 
   getConsumption: function(callback) {
