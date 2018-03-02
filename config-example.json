@@ -11,5 +11,6 @@
     "showTemperature": true,
     "showHumidity": true,
     "showAirQuality": true,
-    "showCO2": true
+    "showCO2": true,
+    "getHistoricalStats": true
 }

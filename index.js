@@ -1,14 +1,14 @@
 var request = require("request");
 var inherits = require('util').inherits;
 var Service, Characteristic;
-var devices = [];
+const moment = require('moment');
 
 module.exports = function(homebridge) {
+	var FakeGatoHistoryService = require('fakegato-history')(homebridge);
 	Service = homebridge.hap.Service;
 	Characteristic = homebridge.hap.Characteristic;
 	
 	homebridge.registerAccessory("homebridge-blueair", "BlueAir", BlueAir);
-
 
 	function BlueAir(log, config) {
 		this.log = log;
@@ -165,6 +165,13 @@ module.exports = function(homebridge) {
 
 			this.services.push(this.CO2SensorService);
 		}
+
+		//fakegato-history
+		this.loggingService = new FakeGatoHistoryService("room", this.log, {
+			storage:'fs'
+		});
+		this.services.push(this.loggingService);
+
 	}
 
 
@@ -407,6 +414,7 @@ module.exports = function(homebridge) {
 							break;
 						}
 					}
+					this.loggingService.addEntry({time: moment().unix(), temp:this.measurements.tmp, humidity:this.measurements.hum, ppm:this.measurements.pm25});
 					callback(null);
 				}
 			}.bind(this));
