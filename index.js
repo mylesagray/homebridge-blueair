@@ -17,7 +17,7 @@ module.exports = function(homebridge) {
 		this.password = config.password;
 		this.appliance = {};
 		this.measurements = {};
-		this.historicalmeasurements = {};
+		this.historicalmeasurements = [];
 		this.name = config.name || 'Air Purifier';
 		this.nameAirQuality = config.nameAirQuality || 'Air Quality';
 		this.nameTemperature = config.nameTemperature || 'Temperature';
@@ -252,7 +252,7 @@ module.exports = function(homebridge) {
 						numberofdevices += 1;
 						callback(null);
 					}
-					this.log("Found", numberofdevices, "appliance(s)");
+					//this.log("Found", numberofdevices, "appliance(s)");
 				}
 			}.bind(this));
 		}.bind(this));
@@ -276,38 +276,38 @@ module.exports = function(homebridge) {
 					callback(error);
 				}
 				else {
-					this.log("Air Purifer:", this.devicename);
+					//this.log("Air Purifer:", this.devicename);
 					var json = JSON.parse(body);
 					for (i = 0; i < json.length; i++) {
 						var obj = json[i];
 						switch(obj.name) {
 							case "brightness":
 							this.appliance.brightness = obj.currentValue;
-							this.log("Brightness:", this.appliance.brightness);
+							//this.log("Brightness:", this.appliance.brightness);
 							break;
 							case "fan_speed":
 							this.appliance.fan_speed = obj.currentValue;
-							this.log("Fan speed:", this.appliance.fan_speed);
+							//this.log("Fan speed:", this.appliance.fan_speed);
 							break;
 							case "child_lock":
 							this.appliance.child_lock = obj.currentValue;
-							this.log("Child lock:", this.appliance.child_lock);
+							//this.log("Child lock:", this.appliance.child_lock);
 							break;
 							case "auto_mode_dependency":
 							this.appliance.auto_mode_dependency = obj.currentValue;
-							this.log("Auto mode dependency:", this.appliance.auto_mode_dependency);
+							//this.log("Auto mode dependency:", this.appliance.auto_mode_dependency);
 							break;
 							case "filter_status":
 							this.appliance.filter_status = obj.currentValue;
-							this.log("Filter status:", this.appliance.filter_status);
+							//this.log("Filter status:", this.appliance.filter_status);
 							break;
 							case "mode":
 							this.appliance.mode = obj.currentValue;
-							this.log("Mode:", this.appliance.mode);
+							//this.log("Mode:", this.appliance.mode);
 							break;
 							case "model":
 							this.appliance.model = obj.currentValue;
-							this.log("BlueAir Model:", this.appliance.model);
+							//this.log("BlueAir Model:", this.appliance.model);
 							break;
 							default:
 							break;
@@ -370,23 +370,23 @@ module.exports = function(homebridge) {
 						switch(json.sensors[i]) {
 							case "pm":
 							this.measurements.pm25 = json.datapoints[0][i];
-							this.log("Particulate matter 2.5:", this.measurements.pm25 + " " + json.units[i]);
+							//this.log("Particulate matter 2.5:", this.measurements.pm25 + " " + json.units[i]);
 							break;
 							case "tmp":
 							this.measurements.tmp = json.datapoints[0][i];
-							this.log("Temperature:", this.measurements.tmp + " " + json.units[i]);
+							//this.log("Temperature:", this.measurements.tmp + " " + json.units[i]);
 							break;
 							case "hum":
 							this.measurements.hum = json.datapoints[0][i];
-							this.log("Humidity:", this.measurements.hum + " " + json.units[i]);
+							//this.log("Humidity:", this.measurements.hum + " " + json.units[i]);
 							break;
 							case "co2":
 							this.measurements.co2 = json.datapoints[0][i];
-							this.log("CO2:", this.measurements.co2 + " " + json.units[i]);
+							//this.log("CO2:", this.measurements.co2 + " " + json.units[i]);
 							break;
 							case "voc":
 							this.measurements.voc = json.datapoints[0][i];
-							this.log("Volatile organic compounds:", this.measurements.voc + " " + json.units[i]);
+							//this.log("Volatile organic compounds:", this.measurements.voc + " " + json.units[i]);
 							break;
 							case "allpollu":
 							var levels = [
@@ -401,7 +401,7 @@ module.exports = function(homebridge) {
 									this.measurements.airquality = item[1];
 								}
 							}
-							this.log("Air Quality:", this.measurements.airquality);
+							//this.log("Air Quality:", this.measurements.airquality);
 							break;
 							default:
 							break;
@@ -437,28 +437,47 @@ module.exports = function(homebridge) {
 				}
 				else {
 					var json = JSON.parse(body);
+					this.log("Datapoints:", json.datapoints.length);
+					this.log("Sensors:", json.sensors.length);
 					for (i = 0; i < json.sensors.length; i++) {
+						this.historicalmeasurements.push([]);
 						switch(json.sensors[i]) {
+							case "time":
+							for (j = 0; j < json.datapoints.length; j++){
+								this.historicalmeasurements[i][j] = json.datapoints[j][i];
+							}
+							break;
+
 							case "pm":
-							this.historicalmeasurements.pm25 = json.datapoints[0][i];
-							this.log("Particulate matter 2.5:", this.historicalmeasurements.pm25 + " " + json.units[i]);
+							for (j = 0; j < json.datapoints.length; j++){
+								this.historicalmeasurements[i][j] = json.datapoints[j][i];
+							}
 							break;
+
 							case "tmp":
-							this.historicalmeasurements.tmp = json.datapoints[0][i];
-							this.log("Temperature:", this.historicalmeasurements.tmp + " " + json.units[i]);
+							for (j = 0; j < json.datapoints.length; j++){
+								this.historicalmeasurements[i][j] = json.datapoints[j][i];
+							}
 							break;
+
 							case "hum":
-							this.historicalmeasurements.hum = json.datapoints[0][i];
-							this.log("Humidity:", this.historicalmeasurements.hum + " " + json.units[i]);
+							for (j = 0; j < json.datapoints.length; j++){
+								this.historicalmeasurements[i][j] = json.datapoints[j][i];
+							}
 							break;
+
 							case "co2":
-							this.historicalmeasurements.co2 = json.datapoints[0][i];
-							this.log("CO2:", this.historicalmeasurements.co2 + " " + json.units[i]);
+							for (j = 0; j < json.datapoints.length; j++){
+								this.historicalmeasurements[i][j] = json.datapoints[j][i];
+							}
 							break;
+
 							case "voc":
-							this.historicalmeasurements.voc = json.datapoints[0][i];
-							this.log("Volatile organic compounds:", this.historicalmeasurements.voc + " " + json.units[i]);
+							for (j = 0; j < json.datapoints.length; j++){
+								this.historicalmeasurements[i][j] = json.datapoints[j][i];
+							}
 							break;
+
 							case "allpollu":
 							var levels = [
 							[70, Characteristic.AirQuality.POOR],
@@ -468,12 +487,14 @@ module.exports = function(homebridge) {
 							[0, Characteristic.AirQuality.EXCELLENT],
 							];
 							for(var item of levels){
-								if(json.datapoints[0][i] >= item[0]){
-									this.historicalmeasurements.airquality = item[1];
+								for (j = 0; j < json.datapoints.length; j++){
+									if(json.datapoints[0][i] >= item[0]){
+										this.historicalmeasurements[i][j] = item[1];
+									}
 								}
 							}
-							this.log("Air Quality:", this.historicalmeasurements.airquality);
 							break;
+
 							default:
 							break;
 						}
@@ -522,7 +543,9 @@ module.exports = function(homebridge) {
 
 	getCO2Peak: function(callback) {
 		this.getHistoricalValues(function(){
-			callback(null, this.historicalmeasurements.co2);
+			var peakCO2 = Math.max(...this.historicalmeasurements[4]);
+			this.log("CO2 largest:", peakCO2);
+			callback(null, peakCO2);
 		}.bind(this));
 	},
 
