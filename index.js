@@ -15,13 +15,17 @@ module.exports = function(homebridge) {
 		this.username = config.username;
 		this.apikey = config.apikey;
 		this.password = config.password;
+		this.appliance = {};
+		this.measurements = {};
 		this.name = config.name || 'Air Purifier';
+		this.nameAirQuality = 'Air Quality';
+		this.nameTemperature = 'Temperature';
+		this.nameHumidity = 'Humidity';
+		this.nameCO2 = 'CO2';
 		this.showAirQuality = config.showAirQuality || false;
 		this.showTemperature = config.showTemperature || false;
 		this.showHumidity = config.showHumidity || false;
-		this.nameAirQuality = config.nameAirQuality || 'Air Quality';
-		this.nameTemperature = config.nameTemperature || 'Temperature';
-		this.nameHumidity = config.nameHumidity || 'Humidity';
+		this.showCO2 = config.showCO2 || false;
 
 		this.base_API_url = "https://api.foobot.io/v2/user/" + this.username + "/homehost/";
 
@@ -36,153 +40,132 @@ module.exports = function(homebridge) {
 		if(!this.apikey)
 			throw new Error('Your must provide your BlueAir API Key.');
 
-	// // Register the service
-	// this.service = new Service.AirPurifier(this.name);
+		// Register the service
+		this.service = new Service.AirPurifier(this.name);
 
-	// this.service
-	// .getCharacteristic(Characteristic.Active)
-	// .on('get', this.getActive.bind(this))
-	// .on('set', this.setActive.bind(this));
+		// this.service
+		// .getCharacteristic(Characteristic.Active)
+		// .on('get', this.getActive.bind(this))
+		// .on('set', this.setActive.bind(this));
 
-	// this.service
-	// .getCharacteristic(Characteristic.CurrentAirPurifierState)
-	// .on('get', this.getCurrentAirPurifierState.bind(this));
+		// this.service
+		// .getCharacteristic(Characteristic.CurrentAirPurifierState)
+		// .on('get', this.getCurrentAirPurifierState.bind(this));
 
-	// this.service
-	// .getCharacteristic(Characteristic.TargetAirPurifierState)
-	// .on('get', this.getTargetAirPurifierState.bind(this))
-	// .on('set', this.setTargetAirPurifierState.bind(this));
+		// this.service
+		// .getCharacteristic(Characteristic.TargetAirPurifierState)
+		// .on('get', this.getTargetAirPurifierState.bind(this))
+		// .on('set', this.setTargetAirPurifierState.bind(this));
 
-	// this.service
-	// .getCharacteristic(Characteristic.LockPhysicalControls)
-	// .on('get', this.getLockPhysicalControls.bind(this))
-	// .on('set', this.setLockPhysicalControls.bind(this));
+		// this.service
+		// .getCharacteristic(Characteristic.LockPhysicalControls)
+		// .on('get', this.getLockPhysicalControls.bind(this))
+		// .on('set', this.setLockPhysicalControls.bind(this));
 
-	// this.service
-	// .getCharacteristic(Characteristic.RotationSpeed)
-	// .on('get', this.getRotationSpeed.bind(this))
-	// .on('set', this.setRotationSpeed.bind(this));
+		// this.service
+		// .getCharacteristic(Characteristic.RotationSpeed)
+		// .on('get', this.getRotationSpeed.bind(this))
+		// .on('set', this.setRotationSpeed.bind(this));
 
-	// // Service information
-	// this.serviceInfo = new Service.AccessoryInformation();
+		// Service information
+		this.serviceInfo = new Service.AccessoryInformation();
 
-	// this.serviceInfo
-	// .setCharacteristic(Characteristic.Manufacturer, 'BlueAir')
-	// .setCharacteristic(Characteristic.Model, 'Air Purifier')
-	// .setCharacteristic(Characteristic.SerialNumber, 'Undefined');
+		this.serviceInfo
+		.setCharacteristic(Characteristic.Manufacturer, 'BlueAir')
+		.setCharacteristic(Characteristic.Model, 'Air Purifier')
+		.setCharacteristic(Characteristic.SerialNumber, 'Undefined');
 
-	// this.services.push(this.service);
-	// this.services.push(this.serviceInfo);
-	
-	// // Register the Lightbulb service (LED / Display)
-	// //this.lightBulbService = new Service.LightBulb(this.name + "LED");
+		this.services.push(this.service);
+		this.services.push(this.serviceInfo);
 
-	// //this.lightBulbService
-	// //  .getCharacteristic(Characteristic.On)
-	// //  .on('get', this.getLED.bind(this))
-	// //  .on('set', this.setLED.bind(this));
-	
-	// //this.services.push(this.lightBulbService);
-	
-	// // Register the Filer Maitenance service
-	// this.filterMaintenanceService = new Service.FilterMaintenance(this.name + "Filter");
+		// Register the Lightbulb service (LED / Display)
+		//this.lightBulbService = new Service.LightBulb(this.name + "LED");
 
-	// this.filterMaintenanceService
-	// .getCharacteristic(Characteristic.FilterChangeIndication)
-	// .on('get', this.getFilterChange.bind(this));
-	
-	// this.filterMaintenanceService
-	// .addCharacteristic(Characteristic.FilterLifeLevel)
-	// .on('get', this.getFilterLife.bind(this));
-	
-	// this.services.push(this.filterMaintenanceService);
+		//this.lightBulbService
+		//  .getCharacteristic(Characteristic.On)
+		//  .on('get', this.getLED.bind(this))
+		//  .on('set', this.setLED.bind(this));
 
-	// if(this.showAirQuality){
-	//   this.airQualitySensorService = new Service.AirQualitySensor(this.nameAirQuality);
+		//this.services.push(this.lightBulbService);
 
-	//   this.airQualitySensorService
-	//   .getCharacteristic(Characteristic.AirQuality)
-	//   .on('get', this.getAirQuality.bind(this));
+		// Register the Filer Maitenance service
+		// this.filterMaintenanceService = new Service.FilterMaintenance(this.name + "Filter");
 
-	//   this.airQualitySensorService
-	//   .getCharacteristic(Characteristic.PM2_5Density)
-	//   .on('get', this.getPM25.bind(this));
+		// this.filterMaintenanceService
+		// .getCharacteristic(Characteristic.FilterChangeIndication)
+		// .on('get', this.getFilterChange.bind(this));
 
-	//   //this.airQualitySensorService
-	//   //  .setCharacteristic(Characteristic.AirParticulateSize, '2.5um');
-	//   //
-	//   this.services.push(this.airQualitySensorService);
-	// }
+		// this.filterMaintenanceService
+		// .addCharacteristic(Characteristic.FilterLifeLevel)
+		// .on('get', this.getFilterLife.bind(this));
 
-	// if(this.showTemperature){
-	//   this.temperatureSensorService = new Service.TemperatureSensor(this.nameTemperature);
+		// this.services.push(this.filterMaintenanceService);
 
-	//   this.temperatureSensorService
-	//   .getCharacteristic(Characteristic.CurrentTemperature)
-	//   .on('get', this.getCurrentTemperature.bind(this));
+		if(this.showAirQuality){
+			this.airQualitySensorService = new Service.AirQualitySensor(this.nameAirQuality);
 
-	//   this.services.push(this.temperatureSensorService);
-	// }
+			this.airQualitySensorService
+			.getCharacteristic(Characteristic.PM2_5Density)
+			.on('get', this.getPM25Density.bind(this));
 
-	// if(this.showHumidity){
-	//   this.humiditySensorService = new Service.HumiditySensor(this.nameHumidity);
+			this.airQualitySensorService
+			.getCharacteristic(Characteristic.AirQuality)
+			.on('get', this.getAirQuality.bind(this));
 
-	//   this.humiditySensorService
-	//   .getCharacteristic(Characteristic.CurrentRelativeHumidity)
-	//   .on('get', this.getCurrentRelativeHumidity.bind(this));
+			this.airQualitySensorService
+			.setCharacteristic(Characteristic.AirParticulateSize, '2.5um');
 
-	//   this.services.push(this.humiditySensorService);
-	// }
+			this.services.push(this.airQualitySensorService);
+		}
 
-	this.getBlueAirSettings();
-}
+		if(this.showTemperature){
+			this.temperatureSensorService = new Service.TemperatureSensor(this.nameTemperature);
 
-// Custom Characteristics and service...
-BlueAir.PowerConsumption = function() {
-	Characteristic.call(this, 'Watts', 'E863F10D-079E-48FF-8F27-9C2605A29F52');
-	this.setProps({
-		format: Characteristic.Formats.FLOAT,
-		maxValue: 999999999,
-		minValue: 1,
-		minStep: 0.001,
-		perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
-	});
-	this.value = this.getDefaultValue();
-};
-inherits(BlueAir.PowerConsumption, Characteristic);
+			this.temperatureSensorService
+			.getCharacteristic(Characteristic.CurrentTemperature)
+			.on('get', this.getTemperature.bind(this));
 
-BlueAir.TotalConsumption = function() {
-	Characteristic.call(this, 'kWh', 'E863F10C-079E-48FF-8F27-9C2605A29F52');
-	this.setProps({
-		format: Characteristic.Formats.FLOAT,
-		maxValue: 999999999,
-		minValue: 1,
-		minStep: 0.001,
-		perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
-	});
-	this.value = this.getDefaultValue();
-};
-inherits(BlueAir.TotalConsumption, Characteristic);
+			this.services.push(this.temperatureSensorService);
+		}
 
-BlueAir.PowerService = function(displayName, subtype) {
-	Service.call(this, displayName, '00000001-0000-1000-8000-135D67EC4377', subtype);
-	this.addCharacteristic(BlueAir.PowerConsumption);
-	this.addCharacteristic(BlueAir.TotalConsumption);
-};
-inherits(BlueAir.PowerService, Service);
+		if(this.showHumidity){
+			this.humiditySensorService = new Service.HumiditySensor(this.nameHumidity);
+
+			this.humiditySensorService
+			.getCharacteristic(Characteristic.CurrentRelativeHumidity)
+			.on('get', this.getHumidity.bind(this));
+
+			this.services.push(this.humiditySensorService);
+		}
+
+		if(this.showCO2){
+			this.CO2SensorService = new Service.CarbonDioxideSensor(this.nameCO2);
+
+			this.CO2SensorService
+			.getCharacteristic(Characteristic.CarbonDioxideLevel)
+			.on('get', this.getCO2.bind(this));
+
+			this.CO2SensorService
+			.getCharacteristic(Characteristic.CarbonDioxideDetected)
+			.on('get', this.getCO2Detected.bind(this));
+
+			this.services.push(this.CO2SensorService);
+		}
+
+		this.getBlueAirSettings();
+	}
 
 
+	BlueAir.prototype = {
 
-BlueAir.prototype = {
+		httpRequest: function(options, callback) {
+			request(options,
+				function (error, response, body) {
+					callback(error, response, body);
+				});
+		},
 
-	httpRequest: function(options, callback) {
-		request(options,
-			function (error, response, body) {
-				callback(error, response, body);
-			});
-	},
-
-	getHomehost: function(callback) {
+		getHomehost: function(callback) {
 		//Build the request
 		var options = {
 			url: this.base_API_url,
@@ -287,25 +270,32 @@ BlueAir.prototype = {
 						var obj = json[i];
 						switch(obj.name) {
 							case "brightness":
-							this.log("Brightness:", obj.currentValue)
+							this.appliance.brightness = obj.currentValue;
+							this.log("Brightness:", this.appliance.brightness);
 							break;
 							case "fan_speed":
-							this.log("Fan speed:", obj.currentValue)
+							this.appliance.fan_speed = obj.currentValue;
+							this.log("Fan speed:", this.appliance.fan_speed);
 							break;
 							case "child_lock":
-							this.log("Child lock:", obj.currentValue)
+							this.appliance.child_lock = obj.currentValue;
+							this.log("Child lock:", this.appliance.child_lock);
 							break;
 							case "auto_mode_dependency":
-							this.log("Auto mode dependency:", obj.currentValue)
+							this.appliance.auto_mode_dependency = obj.currentValue;
+							this.log("Auto mode dependency:", this.appliance.auto_mode_dependency);
 							break;
 							case "filter_status":
-							this.log("Filter status:", obj.currentValue)
+							this.appliance.filter_status = obj.currentValue;
+							this.log("Filter status:", this.appliance.filter_status);
 							break;
 							case "mode":
-							this.log("Mode:", obj.currentValue)
+							this.appliance.mode = obj.currentValue;
+							this.log("Mode:", this.appliance.mode);
 							break;
 							case "model":
-							this.log("BlueAir Model:", obj.currentValue)
+							this.appliance.model = obj.currentValue;
+							this.log("BlueAir Model:", this.appliance.model);
 							break;
 							default:
 							break;
@@ -316,40 +306,114 @@ BlueAir.prototype = {
 		}.bind(this));
 	},
 
-	getTotalConsumption: function(callback) {
-		this.httpRequest(this.kWh_url, 'get', function(error, response, body) {
-			if (error) {
-				this.log('HTTP function failed: %s', error);
-				callback(error);
-			}
-			else {
-				var json = JSON.parse(body);
-				var kWh = parseFloat(json['sum']);
-				this.log('Read Total Consumption:', kWh, 'kWh today');
-				callback(null, kWh);
+	getLatestValues: function(callback) {
+		//Build the request and use returned value
+		this.getBlueAirID(function(){
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/datapoint/0/last/0/',
+				method: 'get',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				}
+			};
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					var json = JSON.parse(body);
+					for (i = 0; i < json.sensors.length; i++) {
+						switch(json.sensors[i]) {
+							case "pm":
+							this.measurements.pm25 = json.datapoints[0][i];
+							this.log("Particulate matter 2.5:", this.measurements.pm25 + " " + json.units[i]);
+							break;
+							case "tmp":
+							this.measurements.tmp = json.datapoints[0][i];
+							this.log("Temperature:", this.measurements.tmp + " " + json.units[i]);
+							break;
+							case "hum":
+							this.measurements.hum = json.datapoints[0][i];
+							this.log("Humidity:", this.measurements.hum + " " + json.units[i]);
+							break;
+							case "co2":
+							this.measurements.co2 = json.datapoints[0][i];
+							this.log("CO2:", this.measurements.co2 + " " + json.units[i]);
+							break;
+							case "voc":
+							this.measurements.voc = json.datapoints[0][i];
+							this.log("Volatile organic compounds:", this.measurements.voc + " " + json.units[i]);
+							break;
+							case "allpollu":
+							var levels = [
+							[70, Characteristic.AirQuality.POOR],
+							[50, Characteristic.AirQuality.INFERIOR],
+							[35, Characteristic.AirQuality.FAIR],
+							[20, Characteristic.AirQuality.GOOD],
+							[0, Characteristic.AirQuality.EXCELLENT],
+							];
+							for(var item of levels){
+								if(json.datapoints[0][i] >= item[0]){
+									this.measurements.airquality = item[1];
+								}
+							}
+							this.log("Air Quality:", this.measurements.airquality);
+							break;
+							default:
+							break;
+						}
+					}
+					callback(null);
+				}
+			}.bind(this));
+		}.bind(this));
+	},
+
+	getAirQuality: function(callback) {
+		this.getLatestValues(function(){
+			callback(null, this.measurements.airquality);
+		}.bind(this));
+	},
+
+	getPM25Density: function(callback) {
+		this.getLatestValues(function(){
+			callback(null, this.measurements.pm25);
+		}.bind(this));
+	},
+
+	getTemperature: function(callback) {
+		this.getLatestValues(function(){
+			callback(null, this.measurements.tmp);
+		}.bind(this));
+	},
+
+	getHumidity: function(callback) {
+		this.getLatestValues(function(){
+			callback(null, this.measurements.hum);
+		}.bind(this));
+	},
+
+	getCO2: function(callback) {
+		this.getLatestValues(function(){
+			callback(null, this.measurements.co2);
+		}.bind(this));
+	},
+
+	getCO2Detected: function(callback) {
+		this.getLatestValues(function(){
+			if (this.measurements.co2 <= 2000){
+				callback(null, 0);
+			} else {
+				callback(null, 1);
 			}
 		}.bind(this));
 	},
 
 	getServices: function() {
-		var that = this;
-
-		var informationService = new Service.AccessoryInformation();
-		informationService
-		.setCharacteristic(Characteristic.Name, this.name)
-		.setCharacteristic(Characteristic.Manufacturer, "BlueAir")
-		.setCharacteristic(Characteristic.Model, "Unknown")
-		.setCharacteristic(Characteristic.SerialNumber, "1234567890");
-
-		var myPowerService = new BlueAir.PowerService("Power Functions");
-		myPowerService
-		.getCharacteristic(BlueAir.PowerConsumption)
-		.on('get', this.getBlueAirSettings.bind(this));
-		myPowerService
-		.getCharacteristic(BlueAir.TotalConsumption)
-		.on('get', this.getTotalConsumption.bind(this));
-
-		return [informationService, myPowerService];
+		return this.services;
 	}
 }
 };
