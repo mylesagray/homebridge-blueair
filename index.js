@@ -403,18 +403,23 @@ BlueAir.prototype = {
 							this.measurements.pm25 = json.datapoints[0][i];
 							//this.log("Particulate matter 2.5:", this.measurements.pm25 + " " + json.units[i]);
 							break;
+
 							case "tmp":
 							this.measurements.tmp = json.datapoints[0][i];
 							//this.log("Temperature:", this.measurements.tmp + " " + json.units[i]);
 							break;
+							
 							case "hum":
 							this.measurements.hum = json.datapoints[0][i];
 							//this.log("Humidity:", this.measurements.hum + " " + json.units[i]);
 							break;
+							
 							case "co2":
+							this.measurements.co2 = json.datapoints[0][i];
+							//this.log("CO2:", this.measurements.co2 + " " + json.units[i]);
 							var levels = [
-							[99999, 2001, Characteristic.AirQuality.POOR],
-							[2000, 1601, Characteristic.AirQuality.INFERIOR],
+							[99999, 2101, Characteristic.AirQuality.POOR],
+							[2100, 1601, Characteristic.AirQuality.INFERIOR],
 							[1600, 1101, Characteristic.AirQuality.FAIR],
 							[1100, 701, Characteristic.AirQuality.GOOD],
 							[700, 0, Characteristic.AirQuality.EXCELLENT],
@@ -422,25 +427,34 @@ BlueAir.prototype = {
 							for(var item of levels){
 								if(json.datapoints[0][i] >= item[1] && json.datapoints[0][i] <= item[0]){
 									this.measurements.airquality = item[2];
-									//this.log("Quality actual:", json.datapoints[0][i], "Between:", item[1], "and", item[0]);
+									this.measurements.airqualityppm = json.datapoints[0][i];
 								}
 							}
-							this.measurements.co2 = json.datapoints[0][i];
-							//this.log("CO2:", this.measurements.co2 + " " + json.units[i]);
 							break;
+							
 							case "voc":
 							this.measurements.voc = json.datapoints[0][i];
 							//this.log("Volatile organic compounds:", this.measurements.voc + " " + json.units[i]);
 							break;
+							
 							case "allpollu":
 							this.measurements.allpollution = item[1];
 							//this.log("All Pollution:", this.measurements.allpollution, json.units[i]);
 							break;
+							
 							default:
 							break;
 						}
 					}
-					this.loggingService.addEntry({time: moment().unix(), temp:this.measurements.tmp, humidity:this.measurements.hum, ppm:this.measurements.pm25});
+					//Fakegato-history add data point
+					//temperature, humidity and air quality
+					//Air Quality measured here as CO2 ppm, not VOC as more BlueAir's CO2 much more closely follows Eve Room's "VOC" measurement)
+					this.loggingService.addEntry({
+						time: moment().unix(),
+						temp:this.measurements.tmp,
+						humidity:this.measurements.hum,
+						ppm:this.measurements.airqualityppm
+					});
 					callback(null);
 				}
 			}.bind(this));
