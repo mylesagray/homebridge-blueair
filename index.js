@@ -19,6 +19,7 @@ module.exports = function(homebridge) {
 		this.measurements = {};
 		this.historicalmeasurements = [];
 		this.name = config.name || 'Air Purifier';
+		this.displayName = config.name;
 		this.nameAirQuality = config.nameAirQuality || 'Air Quality';
 		this.nameTemperature = config.nameTemperature || 'Temperature';
 		this.nameHumidity = config.nameHumidity || 'Humidity';
@@ -167,10 +168,10 @@ module.exports = function(homebridge) {
 		}
 
 		//fakegato-history
-		// this.loggingService = new FakeGatoHistoryService("room", this, {
-		// 	storage:'fs'
-		// });
-		// this.services.push(this.loggingService);
+		this.loggingService = new FakeGatoHistoryService("room", this, {
+		storage:'fs'
+		 });
+		this.services.push(this.loggingService);
 
 	}
 
@@ -414,7 +415,7 @@ module.exports = function(homebridge) {
 							break;
 						}
 					}
-					//this.loggingService.addEntry({time: moment().unix(), temp:this.measurements.tmp, humidity:this.measurements.hum, ppm:this.measurements.pm25});
+					this.loggingService.addEntry({time: moment().unix(), temp:this.measurements.tmp, humidity:this.measurements.hum, ppm:this.measurements.pm25});
 					callback(null);
 				}
 			}.bind(this));
