@@ -127,26 +127,6 @@ module.exports = function(homebridge) {
 			this.airQualitySensorService
 			.setCharacteristic(Characteristic.AirParticulateSize, '2.5um');
 
-			//Start fakegato-history
-			CustomCharacteristic.AirQualCO2 = function() {
-				Characteristic.call(this, 'Air Quality PM25', 'E863F10B-079E-48FF-8F27-9C2605A29F52');
-				this.setProps({
-					format: Characteristic.Formats.UINT16,
-					unit: "ppm",
-					maxValue: 99999,
-					minValue: 0,
-					minStep: 1,
-					perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
-				});
-				this.value = this.getDefaultValue();
-			};
-			inherits(CustomCharacteristic.AirQualCO2, Characteristic);
-
-			this.airQualitySensorService
-			.getCharacteristic(CustomCharacteristic.AirQualCO2)
-			.on('get', this.getCO2.bind(this));
-			//end fakegato-history
-
 			this.services.push(this.airQualitySensorService);
 		}
 
@@ -188,25 +168,47 @@ module.exports = function(homebridge) {
 			this.services.push(this.CO2SensorService);
 		}
 
-		//fakegato-history
-		this.loggingService = new FakeGatoHistoryService("room", this, {
-			storage:'fs'
-		});
-		this.services.push(this.loggingService);
-
-	}
-
-
-	BlueAir.prototype = {
-
-		httpRequest: function(options, callback) {
-			request(options,
-				function (error, response, body) {
-					callback(error, response, body);
+		if(this.getHistoricalStats){
+			//Start fakegato-history custom charactaristic (Air Quality PPM charactaristic)
+			CustomCharacteristic.AirQualCO2 = function() {
+				Characteristic.call(this, 'Air Quality PM25', 'E863F10B-079E-48FF-8F27-9C2605A29F52');
+				this.setProps({
+					format: Characteristic.Formats.UINT16,
+					unit: "ppm",
+					maxValue: 99999,
+					minValue: 0,
+					minStep: 1,
+					perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
 				});
-		},
+				this.value = this.getDefaultValue();
+			};
+			inherits(CustomCharacteristic.AirQualCO2, Characteristic);
 
-		getHomehost: function(callback) {
+			this.airQualitySensorService
+			.getCharacteristic(CustomCharacteristic.AirQualCO2)
+			.on('get', this.getCO2.bind(this));
+			//end fakegato-history charactaristic
+
+			//Fakegato-history masquerading as Eve Room.
+			//Stores history on local filesystem of homebridge appliance
+			this.loggingService = new FakeGatoHistoryService("room", this, {
+				storage:'fs'
+			});
+			this.services.push(this.loggingService);
+		}
+}
+
+
+BlueAir.prototype = {
+
+	httpRequest: function(options, callback) {
+		request(options,
+			function (error, response, body) {
+				callback(error, response, body);
+			});
+	},
+
+	getHomehost: function(callback) {
 		//Build the request
 		var options = {
 			url: this.base_API_url,
