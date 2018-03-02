@@ -17,6 +17,7 @@ module.exports = function(homebridge) {
 		this.password = config.password;
 		this.appliance = {};
 		this.measurements = {};
+		this.historicalmeasurements = {};
 		this.name = config.name || 'Air Purifier';
 		this.nameAirQuality = config.nameAirQuality || 'Air Quality';
 		this.nameTemperature = config.nameTemperature || 'Temperature';
@@ -26,6 +27,7 @@ module.exports = function(homebridge) {
 		this.showTemperature = config.showTemperature || false;
 		this.showHumidity = config.showHumidity || false;
 		this.showCO2 = config.showCO2 || false;
+		this.getHistoricalStats = config.getHistoricalStats || false;
 
 		this.base_API_url = "https://api.foobot.io/v2/user/" + this.username + "/homehost/";
 
@@ -82,9 +84,9 @@ module.exports = function(homebridge) {
 		this.lightBulbService = new Service.Lightbulb(this.name + " LED");
 
 		this.lightBulbService
-		 .getCharacteristic(Characteristic.On)
-		 .on('get', this.getLED.bind(this))
-		 .on('set', this.setLED.bind(this));
+		.getCharacteristic(Characteristic.On)
+		.on('get', this.getLED.bind(this))
+		.on('set', this.setLED.bind(this));
 
 		this.services.push(this.lightBulbService);
 
@@ -111,6 +113,14 @@ module.exports = function(homebridge) {
 			this.airQualitySensorService
 			.getCharacteristic(Characteristic.AirQuality)
 			.on('get', this.getAirQuality.bind(this));
+
+			this.airQualitySensorService
+			.getCharacteristic(Characteristic.VOCDensity)
+			.on('get', this.getVOCDensity.bind(this));
+
+			this.airQualitySensorService
+			.getCharacteristic(Characteristic.CarbonDioxideLevel)
+			.on('get', this.getCO2.bind(this));
 
 			this.airQualitySensorService
 			.setCharacteristic(Characteristic.AirParticulateSize, '2.5um');
@@ -144,6 +154,10 @@ module.exports = function(homebridge) {
 			this.CO2SensorService
 			.getCharacteristic(Characteristic.CarbonDioxideLevel)
 			.on('get', this.getCO2.bind(this));
+
+			this.CO2SensorService
+			.getCharacteristic(Characteristic.CarbonDioxidePeakLevel)
+			.on('get', this.getCO2Peak.bind(this));
 
 			this.CO2SensorService
 			.getCharacteristic(Characteristic.CarbonDioxideDetected)
@@ -399,6 +413,76 @@ module.exports = function(homebridge) {
 		}.bind(this));
 	},
 
+	getHistoricalValues: function(callback) {
+		//Build the request and use returned value
+		this.getBlueAirID(function(){
+			var timenow = new Date();
+			var timelastmonth = new Date();
+			timelastmonth.setMonth(timelastmonth.getMonth() - 1);
+			var tsnow = timenow.toISOString();
+			var tslastmonth = timelastmonth.toISOString();
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/datapoint/' + tslastmonth + '/' + tsnow + '/0/',
+				method: 'get',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				}
+			};
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					var json = JSON.parse(body);
+					for (i = 0; i < json.sensors.length; i++) {
+						switch(json.sensors[i]) {
+							case "pm":
+							this.historicalmeasurements.pm25 = json.datapoints[0][i];
+							this.log("Particulate matter 2.5:", this.historicalmeasurements.pm25 + " " + json.units[i]);
+							break;
+							case "tmp":
+							this.historicalmeasurements.tmp = json.datapoints[0][i];
+							this.log("Temperature:", this.historicalmeasurements.tmp + " " + json.units[i]);
+							break;
+							case "hum":
+							this.historicalmeasurements.hum = json.datapoints[0][i];
+							this.log("Humidity:", this.historicalmeasurements.hum + " " + json.units[i]);
+							break;
+							case "co2":
+							this.historicalmeasurements.co2 = json.datapoints[0][i];
+							this.log("CO2:", this.historicalmeasurements.co2 + " " + json.units[i]);
+							break;
+							case "voc":
+							this.historicalmeasurements.voc = json.datapoints[0][i];
+							this.log("Volatile organic compounds:", this.historicalmeasurements.voc + " " + json.units[i]);
+							break;
+							case "allpollu":
+							var levels = [
+							[70, Characteristic.AirQuality.POOR],
+							[50, Characteristic.AirQuality.INFERIOR],
+							[35, Characteristic.AirQuality.FAIR],
+							[20, Characteristic.AirQuality.GOOD],
+							[0, Characteristic.AirQuality.EXCELLENT],
+							];
+							for(var item of levels){
+								if(json.datapoints[0][i] >= item[0]){
+									this.historicalmeasurements.airquality = item[1];
+								}
+							}
+							this.log("Air Quality:", this.historicalmeasurements.airquality);
+							break;
+							default:
+							break;
+						}
+					}
+					callback(null);
+				}
+			}.bind(this));
+		}.bind(this));
+	},
 
 	getAirQuality: function(callback) {
 		this.getLatestValues(function(){
@@ -409,6 +493,12 @@ module.exports = function(homebridge) {
 	getPM25Density: function(callback) {
 		this.getLatestValues(function(){
 			callback(null, this.measurements.pm25);
+		}.bind(this));
+	},
+
+	getVOCDensity: function(callback) {
+		this.getLatestValues(function(){
+			callback(null, this.measurements.voc);
 		}.bind(this));
 	},
 
@@ -427,6 +517,12 @@ module.exports = function(homebridge) {
 	getCO2: function(callback) {
 		this.getLatestValues(function(){
 			callback(null, this.measurements.co2);
+		}.bind(this));
+	},
+
+	getCO2Peak: function(callback) {
+		this.getHistoricalValues(function(){
+			callback(null, this.historicalmeasurements.co2);
 		}.bind(this));
 	},
 
@@ -511,7 +607,7 @@ module.exports = function(homebridge) {
 
 	getFilterLife: function(callback) {
 		this.getBlueAirInfo(function(){
-				callback(null, this.appliance.filterlevel);
+			callback(null, this.appliance.filterlevel);
 		}.bind(this));
 	},
 
