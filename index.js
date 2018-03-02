@@ -78,15 +78,15 @@ module.exports = function(homebridge) {
 		this.services.push(this.service);
 		this.services.push(this.serviceInfo);
 
-		// Register the Lightbulb service (LED / Display)
-		//this.lightBulbService = new Service.LightBulb(this.name + "LED");
+		//Register the Lightbulb service (LED / Display)
+		this.lightBulbService = new Service.Lightbulb(this.name + " LED");
 
-		//this.lightBulbService
-		//  .getCharacteristic(Characteristic.On)
-		//  .on('get', this.getLED.bind(this))
-		//  .on('set', this.setLED.bind(this));
+		this.lightBulbService
+		 .getCharacteristic(Characteristic.On)
+		 .on('get', this.getLED.bind(this))
+		 .on('set', this.setLED.bind(this));
 
-		//this.services.push(this.lightBulbService);
+		this.services.push(this.lightBulbService);
 
 		//Register the Filer Maitenance service
 		this.filterMaintenanceService = new Service.FilterMaintenance(this.name + " Filter");
@@ -533,6 +533,21 @@ module.exports = function(homebridge) {
 
 	setRotationSpeed: function(callback) {
 		//set fan
+		return;
+	},
+
+	getLED: function(callback) {
+		this.getBlueAirSettings(function(){
+			if (this.appliance.brightness > 0) {
+				callback(null, true);
+			} else {
+				callback(null, false);
+			} 
+		}.bind(this));
+	},
+
+	setLED: function(callback) {
+		//set LED
 		return;
 	},
 
