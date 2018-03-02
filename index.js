@@ -2,6 +2,7 @@ var request = require("request");
 var inherits = require('util').inherits;
 var Service, Characteristic;
 const moment = require('moment');
+var CustomCharacteristic = {};
 
 module.exports = function(homebridge) {
 	var FakeGatoHistoryService = require('fakegato-history')(homebridge);
@@ -126,6 +127,26 @@ module.exports = function(homebridge) {
 			this.airQualitySensorService
 			.setCharacteristic(Characteristic.AirParticulateSize, '2.5um');
 
+			//Start fakegato-history
+			CustomCharacteristic.AirQualCO2 = function() {
+				Characteristic.call(this, 'Air Quality PM25', 'E863F10B-079E-48FF-8F27-9C2605A29F52');
+				this.setProps({
+					format: Characteristic.Formats.UINT16,
+					unit: "ppm",
+					maxValue: 99999,
+					minValue: 0,
+					minStep: 1,
+					perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
+				});
+				this.value = this.getDefaultValue();
+			};
+			inherits(CustomCharacteristic.AirQualCO2, Characteristic);
+
+			this.airQualitySensorService
+			.getCharacteristic(CustomCharacteristic.AirQualCO2)
+			.on('get', this.getCO2.bind(this));
+			//end fakegato-history
+
 			this.services.push(this.airQualitySensorService);
 		}
 
@@ -169,8 +190,8 @@ module.exports = function(homebridge) {
 
 		//fakegato-history
 		this.loggingService = new FakeGatoHistoryService("room", this, {
-		storage:'fs'
-		 });
+			storage:'fs'
+		});
 		this.services.push(this.loggingService);
 
 	}
@@ -389,6 +410,19 @@ module.exports = function(homebridge) {
 							//this.log("Humidity:", this.measurements.hum + " " + json.units[i]);
 							break;
 							case "co2":
+							var levels = [
+							[99999, 2001, Characteristic.AirQuality.POOR],
+							[2000, 1601, Characteristic.AirQuality.INFERIOR],
+							[1600, 1101, Characteristic.AirQuality.FAIR],
+							[1100, 701, Characteristic.AirQuality.GOOD],
+							[700, 0, Characteristic.AirQuality.EXCELLENT],
+							];
+							for(var item of levels){
+								if(json.datapoints[0][i] >= item[1] && json.datapoints[0][i] <= item[0]){
+									this.measurements.airquality = item[2];
+									//this.log("Quality actual:", json.datapoints[0][i], "Between:", item[1], "and", item[0]);
+								}
+							}
 							this.measurements.co2 = json.datapoints[0][i];
 							//this.log("CO2:", this.measurements.co2 + " " + json.units[i]);
 							break;
@@ -397,19 +431,8 @@ module.exports = function(homebridge) {
 							//this.log("Volatile organic compounds:", this.measurements.voc + " " + json.units[i]);
 							break;
 							case "allpollu":
-							var levels = [
-							[70, Characteristic.AirQuality.POOR],
-							[50, Characteristic.AirQuality.INFERIOR],
-							[35, Characteristic.AirQuality.FAIR],
-							[20, Characteristic.AirQuality.GOOD],
-							[0, Characteristic.AirQuality.EXCELLENT],
-							];
-							for(var item of levels){
-								if(json.datapoints[0][i] >= item[0]){
-									this.measurements.airquality = item[1];
-								}
-							}
-							//this.log("Air Quality:", this.measurements.airquality);
+							this.measurements.allpollution = item[1];
+							//this.log("All Pollution:", this.measurements.allpollution, json.units[i]);
 							break;
 							default:
 							break;
@@ -488,19 +511,8 @@ module.exports = function(homebridge) {
 							break;
 
 							case "allpollu":
-							var levels = [
-							[70, Characteristic.AirQuality.POOR],
-							[50, Characteristic.AirQuality.INFERIOR],
-							[35, Characteristic.AirQuality.FAIR],
-							[20, Characteristic.AirQuality.GOOD],
-							[0, Characteristic.AirQuality.EXCELLENT],
-							];
-							for(var item of levels){
-								for (j = 0; j < json.datapoints.length; j++){
-									if(json.datapoints[0][i] >= item[0]){
-										this.historicalmeasurements[i][j] = item[1];
-									}
-								}
+							for (j = 0; j < json.datapoints.length; j++){
+								this.historicalmeasurements[i][j] = json.datapoints[j][i];
 							}
 							break;
 
@@ -647,9 +659,9 @@ module.exports = function(homebridge) {
 			if (this.appliance.fan_speed == 0){
 				callback(null, 0);
 			} else if (this.appliance.fan_speed == 1) {
-				callback(null, 10);
+				callback(null, 33);
 			} else if (this.appliance.fan_speed == 2) {
-				callback(null, 30);
+				callback(null, 66);
 			}	else if (this.appliance.fan_speed == 3) {
 				callback(null, 100);
 			}	else {
