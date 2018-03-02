@@ -544,7 +544,6 @@ module.exports = function(homebridge) {
 	getCO2Peak: function(callback) {
 		this.getHistoricalValues(function(){
 			var peakCO2 = Math.max(...this.historicalmeasurements[4]);
-			this.log("CO2 largest:", peakCO2);
 			callback(null, peakCO2);
 		}.bind(this));
 	},
