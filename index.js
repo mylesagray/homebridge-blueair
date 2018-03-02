@@ -18,10 +18,10 @@ module.exports = function(homebridge) {
 		this.appliance = {};
 		this.measurements = {};
 		this.name = config.name || 'Air Purifier';
-		this.nameAirQuality = 'Air Quality';
-		this.nameTemperature = 'Temperature';
-		this.nameHumidity = 'Humidity';
-		this.nameCO2 = 'CO2';
+		this.nameAirQuality = config.nameAirQuality || 'Air Quality';
+		this.nameTemperature = config.nameTemperature || 'Temperature';
+		this.nameHumidity = config.nameHumidity || 'Humidity';
+		this.nameCO2 = config.nameCO2 || 'CO2';
 		this.showAirQuality = config.showAirQuality || false;
 		this.showTemperature = config.showTemperature || false;
 		this.showHumidity = config.showHumidity || false;
@@ -88,18 +88,18 @@ module.exports = function(homebridge) {
 
 		//this.services.push(this.lightBulbService);
 
-		// Register the Filer Maitenance service
-		// this.filterMaintenanceService = new Service.FilterMaintenance(this.name + "Filter");
+		//Register the Filer Maitenance service
+		this.filterMaintenanceService = new Service.FilterMaintenance(this.name + " Filter");
 
-		// this.filterMaintenanceService
-		// .getCharacteristic(Characteristic.FilterChangeIndication)
-		// .on('get', this.getFilterChange.bind(this));
+		this.filterMaintenanceService
+		.getCharacteristic(Characteristic.FilterChangeIndication)
+		.on('get', this.getFilterChange.bind(this));
 
 		// this.filterMaintenanceService
 		// .addCharacteristic(Characteristic.FilterLifeLevel)
 		// .on('get', this.getFilterLife.bind(this));
 
-		// this.services.push(this.filterMaintenanceService);
+		this.services.push(this.filterMaintenanceService);
 
 		if(this.showAirQuality){
 			this.airQualitySensorService = new Service.AirQualitySensor(this.nameAirQuality);
@@ -151,8 +151,6 @@ module.exports = function(homebridge) {
 
 			this.services.push(this.CO2SensorService);
 		}
-
-		this.getBlueAirSettings();
 	}
 
 
@@ -246,7 +244,7 @@ module.exports = function(homebridge) {
 		}.bind(this));
 	},
 
-	getBlueAirSettings: function() {
+	getBlueAirSettings: function(callback) {
 		//Build request and get current settings
 		this.getBlueAirID(function(){
 			var options = {
@@ -301,6 +299,7 @@ module.exports = function(homebridge) {
 							break;
 						}
 					}
+					callback(null);
 				}
 			}.bind(this));
 		}.bind(this));
@@ -408,6 +407,16 @@ module.exports = function(homebridge) {
 				callback(null, 0);
 			} else {
 				callback(null, 1);
+			}
+		}.bind(this));
+	},
+
+	getFilterChange: function(callback) {
+		this.getBlueAirSettings(function(){
+			if (this.appliance.filter_status == "OK"){
+				callback(null, Characteristic.FilterChangeIndication.FILTER_OK);
+			} else {
+				callback(null, Characteristic.FilterChangeIndication.CHANGE_FILTER);
 			}
 		}.bind(this));
 	},
