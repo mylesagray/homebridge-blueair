@@ -196,19 +196,19 @@ module.exports = function(homebridge) {
 			});
 			this.services.push(this.loggingService);
 		}
-}
+	}
 
 
-BlueAir.prototype = {
+	BlueAir.prototype = {
 
-	httpRequest: function(options, callback) {
-		request(options,
-			function (error, response, body) {
-				callback(error, response, body);
-			});
-	},
+		httpRequest: function(options, callback) {
+			request(options,
+				function (error, response, body) {
+					callback(error, response, body);
+				});
+		},
 
-	getHomehost: function(callback) {
+		getHomehost: function(callback) {
 		//Build the request
 		var options = {
 			url: this.base_API_url,
@@ -397,6 +397,7 @@ BlueAir.prototype = {
 				}
 				else {
 					var json = JSON.parse(body);
+
 					for (i = 0; i < json.sensors.length; i++) {
 						switch(json.sensors[i]) {
 							case "pm":
