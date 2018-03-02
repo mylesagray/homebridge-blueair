@@ -167,10 +167,10 @@ module.exports = function(homebridge) {
 		}
 
 		//fakegato-history
-		this.loggingService = new FakeGatoHistoryService("room", this.log, {
-			storage:'fs'
-		});
-		this.services.push(this.loggingService);
+		// this.loggingService = new FakeGatoHistoryService("room", this, {
+		// 	storage:'fs'
+		// });
+		// this.services.push(this.loggingService);
 
 	}
 
@@ -414,7 +414,7 @@ module.exports = function(homebridge) {
 							break;
 						}
 					}
-					this.loggingService.addEntry({time: moment().unix(), temp:this.measurements.tmp, humidity:this.measurements.hum, ppm:this.measurements.pm25});
+					//this.loggingService.addEntry({time: moment().unix(), temp:this.measurements.tmp, humidity:this.measurements.hum, ppm:this.measurements.pm25});
 					callback(null);
 				}
 			}.bind(this));
