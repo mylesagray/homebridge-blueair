@@ -57,10 +57,10 @@ module.exports = function(homebridge) {
 		// .on('get', this.getTargetAirPurifierState.bind(this))
 		// .on('set', this.setTargetAirPurifierState.bind(this));
 
-		// this.service
-		// .getCharacteristic(Characteristic.LockPhysicalControls)
-		// .on('get', this.getLockPhysicalControls.bind(this))
-		// .on('set', this.setLockPhysicalControls.bind(this));
+		this.service
+		.getCharacteristic(Characteristic.LockPhysicalControls)
+		.on('get', this.getLockPhysicalControls.bind(this))
+		.on('set', this.setLockPhysicalControls.bind(this));
 
 		// this.service
 		// .getCharacteristic(Characteristic.RotationSpeed)
@@ -418,6 +418,22 @@ module.exports = function(homebridge) {
 			} else {
 				callback(null, Characteristic.FilterChangeIndication.CHANGE_FILTER);
 			}
+		}.bind(this));
+	},
+
+	getLockPhysicalControls: function(callback) {
+		this.getBlueAirSettings(function(){
+			if (this.appliance.child_lock == 0){
+				callback(null, Characteristic.LockPhysicalControls.CONTROL_LOCK_DISABLED);
+			} else {
+				callback(null, Characteristic.LockPhysicalControls.CONTROL_LOCK_ENABLED);
+			}
+		}.bind(this));
+	},
+
+	setLockPhysicalControls: function(callback) {
+		this.getLatestValues(function(){
+			callback(null, this.measurements.co2);
 		}.bind(this));
 	},
 
