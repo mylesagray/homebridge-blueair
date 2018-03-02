@@ -62,10 +62,10 @@ module.exports = function(homebridge) {
 		.on('get', this.getLockPhysicalControls.bind(this))
 		.on('set', this.setLockPhysicalControls.bind(this));
 
-		// this.service
-		// .getCharacteristic(Characteristic.RotationSpeed)
-		// .on('get', this.getRotationSpeed.bind(this))
-		// .on('set', this.setRotationSpeed.bind(this));
+		this.service
+		.getCharacteristic(Characteristic.RotationSpeed)
+		.on('get', this.getRotationSpeed.bind(this))
+		.on('set', this.setRotationSpeed.bind(this));
 
 		// Service information
 		this.serviceInfo = new Service.AccessoryInformation();
@@ -462,6 +462,7 @@ module.exports = function(homebridge) {
 
 	setLockPhysicalControls: function(callback) {
 		//Set lock
+		return;
 	},
 
 	getCurrentAirPurifierState: function(callback) {
@@ -488,6 +489,7 @@ module.exports = function(homebridge) {
 
 	setTargetAirPurifierState: function(callback) {
 		//Set state
+		return;
 	},
 
 	getActive: function(callback) {
@@ -504,12 +506,34 @@ module.exports = function(homebridge) {
 
 	setActive: function(callback) {
 		//turn off
+		return;
 	},
 
 	getFilterLife: function(callback) {
 		this.getBlueAirInfo(function(){
 				callback(null, this.appliance.filterlevel);
 		}.bind(this));
+	},
+
+	getRotationSpeed: function(callback) {
+		this.getBlueAirSettings(function(){
+			if (this.appliance.fan_speed == 0){
+				callback(null, 0);
+			} else if (this.appliance.fan_speed == 1) {
+				callback(null, 10);
+			} else if (this.appliance.fan_speed == 2) {
+				callback(null, 30);
+			}	else if (this.appliance.fan_speed == 3) {
+				callback(null, 100);
+			}	else {
+				callback(err);
+			}
+		}.bind(this));
+	},
+
+	setRotationSpeed: function(callback) {
+		//set fan
+		return;
 	},
 
 	getServices: function() {
