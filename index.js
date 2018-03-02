@@ -43,19 +43,19 @@ module.exports = function(homebridge) {
 		// Register the service
 		this.service = new Service.AirPurifier(this.name);
 
-		// this.service
-		// .getCharacteristic(Characteristic.Active)
-		// .on('get', this.getActive.bind(this))
-		// .on('set', this.setActive.bind(this));
+		this.service
+		.getCharacteristic(Characteristic.Active)
+		.on('get', this.getActive.bind(this))
+		.on('set', this.setActive.bind(this));
 
-		// this.service
-		// .getCharacteristic(Characteristic.CurrentAirPurifierState)
-		// .on('get', this.getCurrentAirPurifierState.bind(this));
+		this.service
+		.getCharacteristic(Characteristic.CurrentAirPurifierState)
+		.on('get', this.getCurrentAirPurifierState.bind(this));
 
-		// this.service
-		// .getCharacteristic(Characteristic.TargetAirPurifierState)
-		// .on('get', this.getTargetAirPurifierState.bind(this))
-		// .on('set', this.setTargetAirPurifierState.bind(this));
+		this.service
+		.getCharacteristic(Characteristic.TargetAirPurifierState)
+		.on('get', this.getTargetAirPurifierState.bind(this))
+		.on('set', this.setTargetAirPurifierState.bind(this));
 
 		this.service
 		.getCharacteristic(Characteristic.LockPhysicalControls)
@@ -95,9 +95,9 @@ module.exports = function(homebridge) {
 		.getCharacteristic(Characteristic.FilterChangeIndication)
 		.on('get', this.getFilterChange.bind(this));
 
-		// this.filterMaintenanceService
-		// .addCharacteristic(Characteristic.FilterLifeLevel)
-		// .on('get', this.getFilterLife.bind(this));
+		this.filterMaintenanceService
+		.addCharacteristic(Characteristic.FilterLifeLevel)
+		.on('get', this.getFilterLife.bind(this));
 
 		this.services.push(this.filterMaintenanceService);
 
@@ -305,6 +305,34 @@ module.exports = function(homebridge) {
 		}.bind(this));
 	},
 
+	getBlueAirInfo: function(callback) {
+		//Build request and get current settings
+		this.getBlueAirID(function(){
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/info/',
+				method: 'get',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				}
+			};
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					var json = JSON.parse(body);
+					var filterusageindays = Math.round(((json.initUsagePeriod/60)/60)/24);
+					var filterlifeleft = (180 - filterusageindays);
+					this.appliance.filterlevel = 100 - Math.round(180 / filterlifeleft);
+					callback(null);
+				}
+			}.bind(this));
+		}.bind(this));
+	},
+
 	getLatestValues: function(callback) {
 		//Build the request and use returned value
 		this.getBlueAirID(function(){
@@ -371,6 +399,7 @@ module.exports = function(homebridge) {
 		}.bind(this));
 	},
 
+
 	getAirQuality: function(callback) {
 		this.getLatestValues(function(){
 			callback(null, this.measurements.airquality);
@@ -432,8 +461,54 @@ module.exports = function(homebridge) {
 	},
 
 	setLockPhysicalControls: function(callback) {
-		this.getLatestValues(function(){
-			callback(null, this.measurements.co2);
+		//Set lock
+	},
+
+	getCurrentAirPurifierState: function(callback) {
+		this.getBlueAirSettings(function(){
+			if (this.appliance.fan_speed > 0){
+				callback(null, Characteristic.CurrentAirPurifierState.PURIFYING_AIR);
+			} else {
+				callback(null, Characteristic.CurrentAirPurifierState.INACTIVE);
+			}
+		}.bind(this));
+	},
+
+	getTargetAirPurifierState: function(callback) {
+		this.getBlueAirSettings(function(){
+			if (this.appliance.mode == 'auto'){
+				callback(null, Characteristic.TargetAirPurifierState.AUTO);
+			} else if (this.appliance.mode == 'manual') {
+				callback(null, Characteristic.TargetAirPurifierState.MANUAL);
+			} else {
+				callback(err);
+			}
+		}.bind(this));
+	},
+
+	setTargetAirPurifierState: function(callback) {
+		//Set state
+	},
+
+	getActive: function(callback) {
+		this.getBlueAirSettings(function(){
+			if (this.appliance.fan_speed == 0){
+				callback(null, Characteristic.Active.INACTIVE);
+			} else if (this.appliance.fan_speed >= 1 && this.appliance.fan_speed <= 3) {
+				callback(null, Characteristic.Active.ACTIVE);
+			} else {
+				callback(err);
+			}
+		}.bind(this));
+	},
+
+	setActive: function(callback) {
+		//turn off
+	},
+
+	getFilterLife: function(callback) {
+		this.getBlueAirInfo(function(){
+				callback(null, this.appliance.filterlevel);
 		}.bind(this));
 	},
 
