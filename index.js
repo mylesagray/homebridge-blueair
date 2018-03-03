@@ -49,26 +49,31 @@ module.exports = function(homebridge) {
 		this.service
 		.getCharacteristic(Characteristic.Active)
 		.on('get', this.getActive.bind(this))
-		.on('set', this.setActive.bind(this));
+		.on('set', this.setActive.bind(this))
+		.getDefaultValue();
 
 		this.service
 		.getCharacteristic(Characteristic.CurrentAirPurifierState)
-		.on('get', this.getCurrentAirPurifierState.bind(this));
+		.on('get', this.getCurrentAirPurifierState.bind(this))
+		.getDefaultValue();
 
 		this.service
 		.getCharacteristic(Characteristic.TargetAirPurifierState)
 		.on('get', this.getTargetAirPurifierState.bind(this))
-		.on('set', this.setTargetAirPurifierState.bind(this));
+		.on('set', this.setTargetAirPurifierState.bind(this))
+		.getDefaultValue();
 
 		this.service
 		.getCharacteristic(Characteristic.LockPhysicalControls)
 		.on('get', this.getLockPhysicalControls.bind(this))
-		.on('set', this.setLockPhysicalControls.bind(this));
+		.on('set', this.setLockPhysicalControls.bind(this))
+		.getDefaultValue();
 
 		this.service
 		.getCharacteristic(Characteristic.RotationSpeed)
 		.on('get', this.getRotationSpeed.bind(this))
-		.on('set', this.setRotationSpeed.bind(this));
+		.on('set', this.setRotationSpeed.bind(this))
+		.getDefaultValue();
 
 		// Service information
 		this.serviceInfo = new Service.AccessoryInformation();
@@ -87,7 +92,8 @@ module.exports = function(homebridge) {
 		this.lightBulbService
 		.getCharacteristic(Characteristic.On)
 		.on('get', this.getLED.bind(this))
-		.on('set', this.setLED.bind(this));
+		.on('set', this.setLED.bind(this))
+		.getDefaultValue();
 
 		this.services.push(this.lightBulbService);
 
@@ -96,11 +102,13 @@ module.exports = function(homebridge) {
 
 		this.filterMaintenanceService
 		.getCharacteristic(Characteristic.FilterChangeIndication)
-		.on('get', this.getFilterChange.bind(this));
+		.on('get', this.getFilterChange.bind(this))
+		.getDefaultValue();
 
 		this.filterMaintenanceService
 		.addCharacteristic(Characteristic.FilterLifeLevel)
-		.on('get', this.getFilterLife.bind(this));
+		.on('get', this.getFilterLife.bind(this))
+		.getDefaultValue();
 
 		this.services.push(this.filterMaintenanceService);
 
@@ -109,19 +117,23 @@ module.exports = function(homebridge) {
 
 			this.airQualitySensorService
 			.getCharacteristic(Characteristic.PM2_5Density)
-			.on('get', this.getPM25Density.bind(this));
+			.on('get', this.getPM25Density.bind(this))
+			.getDefaultValue();
 
 			this.airQualitySensorService
 			.getCharacteristic(Characteristic.AirQuality)
-			.on('get', this.getAirQuality.bind(this));
+			.on('get', this.getAirQuality.bind(this))
+			.getDefaultValue();
 
 			this.airQualitySensorService
 			.getCharacteristic(Characteristic.VOCDensity)
-			.on('get', this.getVOCDensity.bind(this));
+			.on('get', this.getVOCDensity.bind(this))
+			.getDefaultValue();
 
 			this.airQualitySensorService
 			.getCharacteristic(Characteristic.CarbonDioxideLevel)
-			.on('get', this.getCO2.bind(this));
+			.on('get', this.getCO2.bind(this))
+			.getDefaultValue();
 
 			this.airQualitySensorService
 			.setCharacteristic(Characteristic.AirParticulateSize, '2.5um');
@@ -134,7 +146,8 @@ module.exports = function(homebridge) {
 
 			this.temperatureSensorService
 			.getCharacteristic(Characteristic.CurrentTemperature)
-			.on('get', this.getTemperature.bind(this));
+			.on('get', this.getTemperature.bind(this))
+			.getDefaultValue();
 
 			this.services.push(this.temperatureSensorService);
 		}
@@ -144,7 +157,8 @@ module.exports = function(homebridge) {
 
 			this.humiditySensorService
 			.getCharacteristic(Characteristic.CurrentRelativeHumidity)
-			.on('get', this.getHumidity.bind(this));
+			.on('get', this.getHumidity.bind(this))
+			.getDefaultValue();
 
 			this.services.push(this.humiditySensorService);
 		}
@@ -154,15 +168,18 @@ module.exports = function(homebridge) {
 
 			this.CO2SensorService
 			.getCharacteristic(Characteristic.CarbonDioxideLevel)
-			.on('get', this.getCO2.bind(this));
+			.on('get', this.getCO2.bind(this))
+			.getDefaultValue();
 
 			this.CO2SensorService
 			.getCharacteristic(Characteristic.CarbonDioxidePeakLevel)
-			.on('get', this.getCO2Peak.bind(this));
+			.on('get', this.getCO2Peak.bind(this))
+			.getDefaultValue();
 
 			this.CO2SensorService
 			.getCharacteristic(Characteristic.CarbonDioxideDetected)
-			.on('get', this.getCO2Detected.bind(this));
+			.on('get', this.getCO2Detected.bind(this))
+			.getDefaultValue();
 
 			this.services.push(this.CO2SensorService);
 		}
@@ -195,10 +212,20 @@ module.exports = function(homebridge) {
 			});
 			this.services.push(this.loggingService);
 		}
+
+		//Poll info on first run and every 5 minutes
+		this.getAllState();
+		setInterval(this.getAllState.bind(this), 300000);
 	}
 
 
 	BlueAir.prototype = {
+
+		getAllState: function(callback){
+			this.getBlueAirSettings(function(){});
+			this.getBlueAirInfo(function(){});
+			this.getLatestValues(function(){});
+		},
 
 		httpRequest: function(options, callback) {
 			request(options,
@@ -382,7 +409,7 @@ module.exports = function(homebridge) {
 									var json = JSON.parse(body);
 									var filterusageindays = Math.round(((json.initUsagePeriod/60)/60)/24);
 									var filterlifeleft = (180 - filterusageindays);
-									this.appliance.filterlevel = 100 - Math.round(180 / filterlifeleft);
+									this.appliance.filterlevel = 100* (filterlifeleft / 180);
 									this.havedeviceInfo = 1;
 									this.lastInfoRefresh = new Date();
 									callback(null);
