@@ -17,7 +17,6 @@ module.exports = function(homebridge) {
 		this.apikey = config.apikey;
 		this.password = config.password;
 		this.appliance = {};
-		this.measurements = {};
 		this.historicalmeasurements = [];
 		this.name = config.name || 'Air Purifier';
 		this.displayName = config.name;
@@ -204,511 +203,559 @@ module.exports = function(homebridge) {
 		httpRequest: function(options, callback) {
 			request(options,
 				function (error, response, body) {
+					this.log("Polled API:", options.url);
 					callback(error, response, body);
-				});
+				}.bind(this));
 		},
 
 		getHomehost: function(callback) {
-		//Build the request
-		var options = {
-			url: this.base_API_url,
-			method: 'get',
-			headers: {
-				'X-API-KEY-TOKEN': this.apikey
-			}
-		};
+			if(this.gothomehost != 1){
+				//Build the request
+				var options = {
+					url: this.base_API_url,
+					method: 'get',
+					headers: {
+						'X-API-KEY-TOKEN': this.apikey
+					}
+				};
 
-		//Send request
-		this.httpRequest(options, function(error, response, body) {
-			if (error) {
-				this.log('HTTP function failed: %s', error);
-				callback(error);
-			}
-			else {
-				var json = JSON.parse(body);
-				this.homehost = json;
-				callback(null);
-			}
-		}.bind(this));
-	},
-
-	login: function(callback) {
-		//Build the request and use returned value
-		this.getHomehost(function(){
-			var options = {
-				url: 'https://' + this.homehost + '/v2/user/' + this.username + '/login/',
-				method: 'get',
-				headers: {
-					'X-API-KEY-TOKEN': this.apikey,
-					'Authorization': 'Basic ' + Buffer.from(this.username + ':' + this.password).toString('base64')
-				}
-			};
-			//Send request
-			this.httpRequest(options, function(error, response, body) {
-				if (error) {
-					this.log('HTTP function failed: %s', error);
-					callback(error);
-				}
-				else {
-					this.authtoken = response.headers['x-auth-token'];
-					callback(null);
-				}
-			}.bind(this));
-		}.bind(this));
-	},
-
-	getBlueAirID: function(callback) {
-		//Build request and get UUID
-		this.login(function(){
-			var options = {
-				url: 'https://' + this.homehost + '/v2/owner/' + this.username + '/device/',
-				method: 'get',
-				headers: {
-					'X-API-KEY-TOKEN': this.apikey,
-					'X-AUTH-TOKEN': this.authtoken
-				}
-			};
-			//Send request
-			this.httpRequest(options, function(error, response, body) {
-				if (error) {
-					this.log('HTTP function failed: %s', error);
-					callback(error);
-				}
-				else {
-					var json = JSON.parse(body);
-					var numberofdevices = '';
-					for (i = 0; i < json.length; i++){
-						this.deviceuuid = json[i].uuid;
-						this.devicename = json[i].name;
-						numberofdevices += 1;
+				//Send request
+				this.httpRequest(options, function(error, response, body) {
+					if (error) {
+						this.log('HTTP function failed: %s', error);
+						callback(error);
+					}
+					else {
+						var json = JSON.parse(body);
+						this.log("Got home region:", json);
+						this.gothomehost = 1;
+						this.homehost = json;
 						callback(null);
 					}
-					//this.log("Found", numberofdevices, "appliance(s)");
-				}
-			}.bind(this));
-		}.bind(this));
-	},
+				}.bind(this));
+			}else{
+				this.log("Already have region");
+				callback(null);
+			}
+		},
 
-	getBlueAirSettings: function(callback) {
-		//Build request and get current settings
-		this.getBlueAirID(function(){
-			var options = {
-				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attributes/',
-				method: 'get',
-				headers: {
-					'X-API-KEY-TOKEN': this.apikey,
-					'X-AUTH-TOKEN': this.authtoken
-				}
-			};
-			//Send request
-			this.httpRequest(options, function(error, response, body) {
-				if (error) {
-					this.log('HTTP function failed: %s', error);
-					callback(error);
-				}
-				else {
-					//this.log("Air Purifer:", this.devicename);
-					var json = JSON.parse(body);
-					for (i = 0; i < json.length; i++) {
-						var obj = json[i];
-						switch(obj.name) {
-							case "brightness":
-							this.appliance.brightness = obj.currentValue;
-							//this.log("Brightness:", this.appliance.brightness);
-							break;
-							case "fan_speed":
-							this.appliance.fan_speed = obj.currentValue;
-							//this.log("Fan speed:", this.appliance.fan_speed);
-							break;
-							case "child_lock":
-							this.appliance.child_lock = obj.currentValue;
-							//this.log("Child lock:", this.appliance.child_lock);
-							break;
-							case "auto_mode_dependency":
-							this.appliance.auto_mode_dependency = obj.currentValue;
-							//this.log("Auto mode dependency:", this.appliance.auto_mode_dependency);
-							break;
-							case "filter_status":
-							this.appliance.filter_status = obj.currentValue;
-							//this.log("Filter status:", this.appliance.filter_status);
-							break;
-							case "mode":
-							this.appliance.mode = obj.currentValue;
-							//this.log("Mode:", this.appliance.mode);
-							break;
-							case "model":
-							this.appliance.model = obj.currentValue;
-							//this.log("BlueAir Model:", this.appliance.model);
-							break;
-							default:
-							break;
+		login: function(callback) {
+			if(this.loggedin != 1){
+				//Build the request and use returned value
+				this.getHomehost(function(){
+					var options = {
+						url: 'https://' + this.homehost + '/v2/user/' + this.username + '/login/',
+						method: 'get',
+						headers: {
+							'X-API-KEY-TOKEN': this.apikey,
+							'Authorization': 'Basic ' + Buffer.from(this.username + ':' + this.password).toString('base64')
 						}
+					};
+					//Send request
+					this.httpRequest(options, function(error, response, body) {
+						if (error) {
+							this.log('HTTP function failed: %s', error);
+							callback(error);
+						}
+						else {
+							this.loggedin = 1;
+							this.log("Logged in to API");
+							this.authtoken = response.headers['x-auth-token'];
+							callback(null);
+						}
+					}.bind(this));
+				}.bind(this));
+			} else {
+				this.log("Already logged in");
+				callback(null);
+			}
+		},
+
+		getBlueAirID: function(callback) {
+			if(this.havedeviceID != 1){
+				//Build request and get UUID
+				this.login(function(){
+					var options = {
+						url: 'https://' + this.homehost + '/v2/owner/' + this.username + '/device/',
+						method: 'get',
+						headers: {
+							'X-API-KEY-TOKEN': this.apikey,
+							'X-AUTH-TOKEN': this.authtoken
+						}
+					};
+					//Send request
+					this.httpRequest(options, function(error, response, body) {
+						if (error) {
+							this.log('HTTP function failed: %s', error);
+							callback(error);
+						}
+						else {
+							var json = JSON.parse(body);
+							var numberofdevices = '';
+							for (i = 0; i < json.length; i++){
+								this.deviceuuid = json[i].uuid;
+								this.devicename = json[i].name;
+								numberofdevices += 1;
+								callback(null);
+							}
+							this.havedeviceID = 1;
+							this.log("Got device ID"); 
+							//this.log("Found", numberofdevices, "appliance(s)");
+						}
+					}.bind(this));
+				}.bind(this));
+			} else {
+				this.log("Already have device ID");
+				callback(null);
+			}
+		},
+
+		getBlueAirSettings: function(callback) {
+			//Get time now and check if we pulled from API in the last 5 minutes
+			//if so, don't refresh as this is the max resolution of API
+			var time = new Date();
+			time.setSeconds(time.getSeconds() - 5);
+
+			if(typeof this.lastSettingRefresh !== 'undefined' || this.havedevicesettings != 1) {
+				if(time > this.lastSettingRefresh || this.havedevicesettings != 1) {
+					//Build request and get current settings
+					this.getBlueAirID(function(){
+						var options = {
+							url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attributes/',
+							method: 'get',
+							headers: {
+								'X-API-KEY-TOKEN': this.apikey,
+								'X-AUTH-TOKEN': this.authtoken
+							}
+						};
+				//Send request
+				this.httpRequest(options, function(error, response, body) {
+					if (error) {
+						this.log('HTTP function failed: %s', error);
+						callback(error);
 					}
+					else {
+						var json = JSON.parse(body);
+						this.appliance = json.reduce(function(obj, prop) {
+							obj[prop.name] = prop.currentValue;
+							return obj;
+						}, {});
+						this.log("Got device settings")
+						this.havedevicesettings = 1;
+						this.lastSettingRefresh = new Date();
+						callback(null);
+					}
+				}.bind(this));
+			}.bind(this));
+				} else {
+					this.log("Already polled settings last 5 seconds, waiting.");
 					callback(null);
 				}
-			}.bind(this));
-		}.bind(this));
-	},
+			}
+		},
 
-	getBlueAirInfo: function(callback) {
-		//Build request and get current settings
-		this.getBlueAirID(function(){
-			var options = {
-				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/info/',
-				method: 'get',
-				headers: {
-					'X-API-KEY-TOKEN': this.apikey,
-					'X-AUTH-TOKEN': this.authtoken
-				}
-			};
-			//Send request
-			this.httpRequest(options, function(error, response, body) {
-				if (error) {
-					this.log('HTTP function failed: %s', error);
-					callback(error);
-				}
-				else {
-					var json = JSON.parse(body);
-					var filterusageindays = Math.round(((json.initUsagePeriod/60)/60)/24);
-					var filterlifeleft = (180 - filterusageindays);
-					this.appliance.filterlevel = 100 - Math.round(180 / filterlifeleft);
-					callback(null);
-				}
-			}.bind(this));
-		}.bind(this));
-	},
+		getBlueAirInfo: function(callback) {
+			//Get time now and check if we pulled from API in the last 5 minutes
+			//if so, don't refresh as this is the max resolution of API
+			var time = new Date();
+			time.setMinutes(time.getMinutes() - 5);
 
-	getLatestValues: function(callback) {
-		//Build the request and use returned value
-		this.getBlueAirID(function(){
-			var options = {
-				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/datapoint/0/last/0/',
-				method: 'get',
-				headers: {
-					'X-API-KEY-TOKEN': this.apikey,
-					'X-AUTH-TOKEN': this.authtoken
-				}
-			};
-			//Send request
-			this.httpRequest(options, function(error, response, body) {
-				if (error) {
-					this.log('HTTP function failed: %s', error);
-					callback(error);
-				}
-				else {
-					var json = JSON.parse(body);
-
-					for (i = 0; i < json.sensors.length; i++) {
-						switch(json.sensors[i]) {
-							case "pm":
-							this.measurements.pm25 = json.datapoints[0][i];
-							//this.log("Particulate matter 2.5:", this.measurements.pm25 + " " + json.units[i]);
-							break;
-
-							case "tmp":
-							this.measurements.tmp = json.datapoints[0][i];
-							//this.log("Temperature:", this.measurements.tmp + " " + json.units[i]);
-							break;
-							
-							case "hum":
-							this.measurements.hum = json.datapoints[0][i];
-							//this.log("Humidity:", this.measurements.hum + " " + json.units[i]);
-							break;
-							
-							case "co2":
-							this.measurements.co2 = json.datapoints[0][i];
-							//this.log("CO2:", this.measurements.co2 + " " + json.units[i]);
-							var levels = [
-							[99999, 2101, Characteristic.AirQuality.POOR],
-							[2100, 1601, Characteristic.AirQuality.INFERIOR],
-							[1600, 1101, Characteristic.AirQuality.FAIR],
-							[1100, 701, Characteristic.AirQuality.GOOD],
-							[700, 0, Characteristic.AirQuality.EXCELLENT],
-							];
-							for(var item of levels){
-								if(json.datapoints[0][i] >= item[1] && json.datapoints[0][i] <= item[0]){
-									this.measurements.airquality = item[2];
-									this.measurements.airqualityppm = json.datapoints[0][i];
+			if(typeof this.lastInfoRefresh !== 'undefined' || this.havedeviceInfo != 1) {
+				if(time > this.lastInfoRefresh || this.havedeviceInfo != 1) {
+					//Build request and get current settings
+					this.getBlueAirID(function(){
+						var options = {
+							url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/info/',
+							method: 'get',
+							headers: {
+								'X-API-KEY-TOKEN': this.apikey,
+								'X-AUTH-TOKEN': this.authtoken
+							}
+						};
+							//Send request
+							this.httpRequest(options, function(error, response, body) {
+								if (error) {
+									this.log('HTTP function failed: %s', error);
+									callback(error);
 								}
-							}
-							break;
-							
-							case "voc":
-							this.measurements.voc = json.datapoints[0][i];
-							//this.log("Volatile organic compounds:", this.measurements.voc + " " + json.units[i]);
-							break;
-							
-							case "allpollu":
-							this.measurements.allpollution = item[1];
-							//this.log("All Pollution:", this.measurements.allpollution, json.units[i]);
-							break;
-							
-							default:
-							break;
-						}
-					}
-					//Fakegato-history add data point
-					//temperature, humidity and air quality
-					//Air Quality measured here as CO2 ppm, not VOC as more BlueAir's CO2 much more closely follows Eve Room's "VOC" measurement)
-					this.loggingService.addEntry({
-						time: moment().unix(),
-						temp:this.measurements.tmp,
-						humidity:this.measurements.hum,
-						ppm:this.measurements.airqualityppm
-					});
+								else {
+									var json = JSON.parse(body);
+									var filterusageindays = Math.round(((json.initUsagePeriod/60)/60)/24);
+									var filterlifeleft = (180 - filterusageindays);
+									this.appliance.filterlevel = 100 - Math.round(180 / filterlifeleft);
+									this.havedeviceInfo = 1;
+									this.lastInfoRefresh = new Date();
+									callback(null);
+								}
+							}.bind(this));
+						}.bind(this));
+				} else {
+					this.log("Device info polled in last 5 minutes, waiting.");
 					callback(null);
 				}
-			}.bind(this));
-		}.bind(this));
-	},
+			}
+		},
 
-	getHistoricalValues: function(callback) {
-		//Build the request and use returned value
-		this.getBlueAirID(function(){
-			var timenow = new Date();
-			var timelastmonth = new Date();
-			timelastmonth.setMonth(timelastmonth.getMonth() - 1);
-			var tsnow = timenow.toISOString();
-			var tslastmonth = timelastmonth.toISOString();
-			var options = {
-				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/datapoint/' + tslastmonth + '/' + tsnow + '/0/',
-				method: 'get',
-				headers: {
-					'X-API-KEY-TOKEN': this.apikey,
-					'X-AUTH-TOKEN': this.authtoken
+		getLatestValues: function(callback) {
+			//Get time now and check if we pulled from API in the last 5 minutes
+			//if so, don't refresh as this is the max resolution of API
+			var time = new Date();
+			time.setMinutes(time.getMinutes() - 5);
+
+			if(typeof this.lastSensorRefresh !== 'undefined' || typeof this.measurements == 'undefined') {
+				if(time > this.lastSensorRefresh || typeof this.measurements == 'undefined') {
+					//Build the request and use returned value
+					this.getBlueAirID(function(){
+						var options = {
+							url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/datapoint/0/last/0/',
+							method: 'get',
+							headers: {
+								'X-API-KEY-TOKEN': this.apikey,
+								'X-AUTH-TOKEN': this.authtoken
+							}
+						};
+						//Send request
+						this.httpRequest(options, function(error, response, body) {
+							if (error) {
+								this.log('HTTP function failed: %s', error);
+								callback(error);
+							}
+							else {
+								this.measurements = {};
+								var json = JSON.parse(body);
+								this.lastSensorRefresh = new Date();
+
+								for (i = 0; i < json.sensors.length; i++) {
+									switch(json.sensors[i]) {
+										case "pm":
+										this.measurements.pm = json.datapoints[0][i];
+										//this.log("Particulate matter 2.5:", this.measurements.pm + " " + json.units[i]);
+										break;
+
+										case "tmp":
+										this.measurements.tmp = json.datapoints[0][i];
+										//this.log("Temperature:", this.measurements.tmp + " " + json.units[i]);
+										break;
+
+										case "hum":
+										this.measurements.hum = json.datapoints[0][i];
+										//this.log("Humidity:", this.measurements.hum + " " + json.units[i]);
+										break;
+
+										case "co2":
+										this.measurements.co2 = json.datapoints[0][i];
+										//this.log("CO2:", this.measurements.co2 + " " + json.units[i]);
+										var levels = [
+										[99999, 2101, Characteristic.AirQuality.POOR],
+										[2100, 1601, Characteristic.AirQuality.INFERIOR],
+										[1600, 1101, Characteristic.AirQuality.FAIR],
+										[1100, 701, Characteristic.AirQuality.GOOD],
+										[700, 0, Characteristic.AirQuality.EXCELLENT],
+										];
+										for(var item of levels){
+											if(json.datapoints[0][i] >= item[1] && json.datapoints[0][i] <= item[0]){
+												this.measurements.airquality = item[2];
+												this.measurements.airqualityppm = json.datapoints[0][i];
+											}
+										}
+										break;
+
+										case "voc":
+										this.measurements.voc = json.datapoints[0][i];
+										//this.log("Volatile organic compounds:", this.measurements.voc + " " + json.units[i]);
+										break;
+
+										case "allpollu":
+										this.measurements.allpollu = item[1];
+										//this.log("All Pollution:", this.measurements.allpollu, json.units[i]);
+										break;
+
+										default:
+										break;
+									}
+								}
+								//Fakegato-history add data point
+								//temperature, humidity and air quality
+								//Air Quality measured here as CO2 ppm, not VOC as more BlueAir's CO2 much more closely follows Eve Room's "VOC" measurement)
+								this.loggingService.addEntry({
+									time: moment().unix(),
+									temp: this.measurements.tmp,
+									humidity: this.measurements.hum,
+									ppm: this.measurements.airqualityppm
+								});
+								this.log("Sensor data refreshed");
+								callback(null);
+							}
+						}.bind(this));
+					}.bind(this));
 				}
-			};
-			//Send request
-			this.httpRequest(options, function(error, response, body) {
-				if (error) {
-					this.log('HTTP function failed: %s', error);
-					callback(error);
-				}
-				else {
-					var json = JSON.parse(body);
-					this.log("Datapoints:", json.datapoints.length);
-					this.log("Sensors:", json.sensors.length);
-					for (i = 0; i < json.sensors.length; i++) {
-						this.historicalmeasurements.push([]);
-						switch(json.sensors[i]) {
-							case "time":
-							for (j = 0; j < json.datapoints.length; j++){
-								this.historicalmeasurements[i][j] = json.datapoints[j][i];
-							}
-							break;
-
-							case "pm":
-							for (j = 0; j < json.datapoints.length; j++){
-								this.historicalmeasurements[i][j] = json.datapoints[j][i];
-							}
-							break;
-
-							case "tmp":
-							for (j = 0; j < json.datapoints.length; j++){
-								this.historicalmeasurements[i][j] = json.datapoints[j][i];
-							}
-							break;
-
-							case "hum":
-							for (j = 0; j < json.datapoints.length; j++){
-								this.historicalmeasurements[i][j] = json.datapoints[j][i];
-							}
-							break;
-
-							case "co2":
-							for (j = 0; j < json.datapoints.length; j++){
-								this.historicalmeasurements[i][j] = json.datapoints[j][i];
-							}
-							break;
-
-							case "voc":
-							for (j = 0; j < json.datapoints.length; j++){
-								this.historicalmeasurements[i][j] = json.datapoints[j][i];
-							}
-							break;
-
-							case "allpollu":
-							for (j = 0; j < json.datapoints.length; j++){
-								this.historicalmeasurements[i][j] = json.datapoints[j][i];
-							}
-							break;
-
-							default:
-							break;
-						}
-					}
+				else
+				{
+					this.log("Sensor data polled in last 5 minutes, waiting.");
 					callback(null);
 				}
+			}
+		},
+
+		getHistoricalValues: function(callback) {
+			//Get time now and check if we pulled from API in the last 5 minutes
+			//if so, don't refresh as this is the max resolution of API
+			var time = new Date();
+			time.setMinutes(time.getMinutes() - 30);
+
+			if(typeof this.lastHistoricalRefresh !== 'undefined' || typeof this.historicalmeasurements[0] == 'undefined') {
+				if(time > this.lastHistoricalRefresh || typeof this.historicalmeasurements[0] == 'undefined') {
+					//Build the request and use returned value
+					this.getBlueAirID(function(){
+						var timenow = new Date();
+						var timelastmonth = new Date();
+						timelastmonth.setMonth(timelastmonth.getMonth() - 1);
+						var tsnow = timenow.toISOString();
+						var tslastmonth = timelastmonth.toISOString();
+						var options = {
+							url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/datapoint/' + tslastmonth + '/' + tsnow + '/0/',
+							method: 'get',
+							headers: {
+								'X-API-KEY-TOKEN': this.apikey,
+								'X-AUTH-TOKEN': this.authtoken
+							}
+						};
+						//Send request
+						this.httpRequest(options, function(error, response, body) {
+							if (error) {
+								this.log('HTTP function failed: %s', error);
+								callback(error);
+							}
+							else {
+								var json = JSON.parse(body);
+								this.log("Downloaded " + json.datapoints.length + " datapoints for " + json.sensors.length + " senors");
+								for (i = 0; i < json.sensors.length; i++) {
+									this.historicalmeasurements.push([]);
+									switch(json.sensors[i]) {
+										case "time":
+										for (j = 0; j < json.datapoints.length; j++){
+											this.historicalmeasurements[i][j] = json.datapoints[j][i];
+										}
+										break;
+
+										case "pm":
+										for (j = 0; j < json.datapoints.length; j++){
+											this.historicalmeasurements[i][j] = json.datapoints[j][i];
+										}
+										break;
+
+										case "tmp":
+										for (j = 0; j < json.datapoints.length; j++){
+											this.historicalmeasurements[i][j] = json.datapoints[j][i];
+										}
+										break;
+
+										case "hum":
+										for (j = 0; j < json.datapoints.length; j++){
+											this.historicalmeasurements[i][j] = json.datapoints[j][i];
+										}
+										break;
+
+										case "co2":
+										for (j = 0; j < json.datapoints.length; j++){
+											this.historicalmeasurements[i][j] = json.datapoints[j][i];
+										}
+										break;
+
+										case "voc":
+										for (j = 0; j < json.datapoints.length; j++){
+											this.historicalmeasurements[i][j] = json.datapoints[j][i];
+										}
+										break;
+
+										case "allpollu":
+										for (j = 0; j < json.datapoints.length; j++){
+											this.historicalmeasurements[i][j] = json.datapoints[j][i];
+										}
+										break;
+
+										default:
+										break;
+									}
+								}
+								this.lastHistoricalRefresh = new Date();
+								callback(null);
+							}
+						}.bind(this));
+					}.bind(this));
+				} else {
+					this.log("Pulled historical data in last 30 mins, waiting");
+					callback();
+				}
+			}
+		},
+
+		getAirQuality: function(callback) {
+			this.getLatestValues(function(){
+				callback(null, this.measurements.airquality);
 			}.bind(this));
-		}.bind(this));
-	},
+		},
 
-	getAirQuality: function(callback) {
-		this.getLatestValues(function(){
-			callback(null, this.measurements.airquality);
-		}.bind(this));
-	},
+		getPM25Density: function(callback) {
+			this.getLatestValues(function(){
+				callback(null, this.measurements.pm);
+			}.bind(this));
+		},
 
-	getPM25Density: function(callback) {
-		this.getLatestValues(function(){
-			callback(null, this.measurements.pm25);
-		}.bind(this));
-	},
+		getVOCDensity: function(callback) {
+			this.getLatestValues(function(){
+				callback(null, this.measurements.voc);
+			}.bind(this));
+		},
 
-	getVOCDensity: function(callback) {
-		this.getLatestValues(function(){
-			callback(null, this.measurements.voc);
-		}.bind(this));
-	},
+		getTemperature: function(callback) {
+			this.getLatestValues(function(){
+				callback(null, this.measurements.tmp);
+			}.bind(this));
+		},
 
-	getTemperature: function(callback) {
-		this.getLatestValues(function(){
-			callback(null, this.measurements.tmp);
-		}.bind(this));
-	},
+		getHumidity: function(callback) {
+			this.getLatestValues(function(){
+				callback(null, this.measurements.hum);
+			}.bind(this));
+		},
 
-	getHumidity: function(callback) {
-		this.getLatestValues(function(){
-			callback(null, this.measurements.hum);
-		}.bind(this));
-	},
+		getCO2: function(callback) {
+			this.getLatestValues(function(){
+				callback(null, this.measurements.co2);
+			}.bind(this));
+		},
 
-	getCO2: function(callback) {
-		this.getLatestValues(function(){
-			callback(null, this.measurements.co2);
-		}.bind(this));
-	},
+		getCO2Peak: function(callback) {
+			this.getHistoricalValues(function(){
+				var peakCO2 = Math.max(...this.historicalmeasurements[4]);
+				callback(null, peakCO2);
+			}.bind(this));
+		},
 
-	getCO2Peak: function(callback) {
-		this.getHistoricalValues(function(){
-			var peakCO2 = Math.max(...this.historicalmeasurements[4]);
-			callback(null, peakCO2);
-		}.bind(this));
-	},
+		getCO2Detected: function(callback) {
+			this.getLatestValues(function(){
+				if (this.measurements.co2 <= 2000){
+					callback(null, 0);
+				} else {
+					callback(null, 1);
+				}
+			}.bind(this));
+		},
 
-	getCO2Detected: function(callback) {
-		this.getLatestValues(function(){
-			if (this.measurements.co2 <= 2000){
-				callback(null, 0);
-			} else {
-				callback(null, 1);
-			}
-		}.bind(this));
-	},
+		getFilterChange: function(callback) {
+			this.getBlueAirSettings(function(){
+				if (this.appliance.filter_status == "OK"){
+					callback(null, Characteristic.FilterChangeIndication.FILTER_OK);
+				} else {
+					callback(null, Characteristic.FilterChangeIndication.CHANGE_FILTER);
+				}
+			}.bind(this));
+		},
 
-	getFilterChange: function(callback) {
-		this.getBlueAirSettings(function(){
-			if (this.appliance.filter_status == "OK"){
-				callback(null, Characteristic.FilterChangeIndication.FILTER_OK);
-			} else {
-				callback(null, Characteristic.FilterChangeIndication.CHANGE_FILTER);
-			}
-		}.bind(this));
-	},
+		getLockPhysicalControls: function(callback) {
+			this.getBlueAirSettings(function(){
+				if (this.appliance.child_lock == 0){
+					callback(null, Characteristic.LockPhysicalControls.CONTROL_LOCK_DISABLED);
+				} else {
+					callback(null, Characteristic.LockPhysicalControls.CONTROL_LOCK_ENABLED);
+				}
+			}.bind(this));
+		},
 
-	getLockPhysicalControls: function(callback) {
-		this.getBlueAirSettings(function(){
-			if (this.appliance.child_lock == 0){
-				callback(null, Characteristic.LockPhysicalControls.CONTROL_LOCK_DISABLED);
-			} else {
-				callback(null, Characteristic.LockPhysicalControls.CONTROL_LOCK_ENABLED);
-			}
-		}.bind(this));
-	},
+		setLockPhysicalControls: function(callback) {
+			//Set lock
+			return;
+		},
 
-	setLockPhysicalControls: function(callback) {
-		//Set lock
-		return;
-	},
+		getCurrentAirPurifierState: function(callback) {
+			this.getBlueAirSettings(function(){
+				if (this.appliance.fan_speed > 0){
+					callback(null, Characteristic.CurrentAirPurifierState.PURIFYING_AIR);
+				} else {
+					callback(null, Characteristic.CurrentAirPurifierState.INACTIVE);
+				}
+			}.bind(this));
+		},
 
-	getCurrentAirPurifierState: function(callback) {
-		this.getBlueAirSettings(function(){
-			if (this.appliance.fan_speed > 0){
-				callback(null, Characteristic.CurrentAirPurifierState.PURIFYING_AIR);
-			} else {
-				callback(null, Characteristic.CurrentAirPurifierState.INACTIVE);
-			}
-		}.bind(this));
-	},
+		getTargetAirPurifierState: function(callback) {
+			this.getBlueAirSettings(function(){
+				if (this.appliance.mode == 'auto'){
+					callback(null, Characteristic.TargetAirPurifierState.AUTO);
+				} else if (this.appliance.mode == 'manual') {
+					callback(null, Characteristic.TargetAirPurifierState.MANUAL);
+				} else {
+					callback(err);
+				}
+			}.bind(this));
+		},
 
-	getTargetAirPurifierState: function(callback) {
-		this.getBlueAirSettings(function(){
-			if (this.appliance.mode == 'auto'){
-				callback(null, Characteristic.TargetAirPurifierState.AUTO);
-			} else if (this.appliance.mode == 'manual') {
-				callback(null, Characteristic.TargetAirPurifierState.MANUAL);
-			} else {
-				callback(err);
-			}
-		}.bind(this));
-	},
+		setTargetAirPurifierState: function(callback) {
+			//Set state
+			return;
+		},
 
-	setTargetAirPurifierState: function(callback) {
-		//Set state
-		return;
-	},
+		getActive: function(callback) {
+			this.getBlueAirSettings(function(){
+				if (this.appliance.fan_speed == 0){
+					callback(null, Characteristic.Active.INACTIVE);
+				} else if (this.appliance.fan_speed >= 1 && this.appliance.fan_speed <= 3) {
+					callback(null, Characteristic.Active.ACTIVE);
+				} else {
+					callback(err);
+				}
+			}.bind(this));
+		},
 
-	getActive: function(callback) {
-		this.getBlueAirSettings(function(){
-			if (this.appliance.fan_speed == 0){
-				callback(null, Characteristic.Active.INACTIVE);
-			} else if (this.appliance.fan_speed >= 1 && this.appliance.fan_speed <= 3) {
-				callback(null, Characteristic.Active.ACTIVE);
-			} else {
-				callback(err);
-			}
-		}.bind(this));
-	},
+		setActive: function(callback) {
+			//turn off
+			return;
+		},
 
-	setActive: function(callback) {
-		//turn off
-		return;
-	},
+		getFilterLife: function(callback) {
+			this.getBlueAirInfo(function(){
+				callback(null, this.appliance.filterlevel);
+			}.bind(this));
+		},
 
-	getFilterLife: function(callback) {
-		this.getBlueAirInfo(function(){
-			callback(null, this.appliance.filterlevel);
-		}.bind(this));
-	},
+		getRotationSpeed: function(callback) {
+			this.getBlueAirSettings(function(){
+				if (this.appliance.fan_speed == 0){
+					callback(null, 0);
+				} else if (this.appliance.fan_speed == 1) {
+					callback(null, 33);
+				} else if (this.appliance.fan_speed == 2) {
+					callback(null, 66);
+				}	else if (this.appliance.fan_speed == 3) {
+					callback(null, 100);
+				}	else {
+					callback(err);
+				}
+			}.bind(this));
+		},
 
-	getRotationSpeed: function(callback) {
-		this.getBlueAirSettings(function(){
-			if (this.appliance.fan_speed == 0){
-				callback(null, 0);
-			} else if (this.appliance.fan_speed == 1) {
-				callback(null, 33);
-			} else if (this.appliance.fan_speed == 2) {
-				callback(null, 66);
-			}	else if (this.appliance.fan_speed == 3) {
-				callback(null, 100);
-			}	else {
-				callback(err);
-			}
-		}.bind(this));
-	},
+		setRotationSpeed: function(callback) {
+			//set fan
+			return;
+		},
 
-	setRotationSpeed: function(callback) {
-		//set fan
-		return;
-	},
+		getLED: function(callback) {
+			this.getBlueAirSettings(function(){
+				if (this.appliance.brightness > 0) {
+					callback(null, true);
+				} else {
+					callback(null, false);
+				} 
+			}.bind(this));
+		},
 
-	getLED: function(callback) {
-		this.getBlueAirSettings(function(){
-			if (this.appliance.brightness > 0) {
-				callback(null, true);
-			} else {
-				callback(null, false);
-			} 
-		}.bind(this));
-	},
+		setLED: function(callback) {
+			//set LED
+			return;
+		},
 
-	setLED: function(callback) {
-		//set LED
-		return;
-	},
-
-	getServices: function() {
-		return this.services;
+		getServices: function() {
+			return this.services;
+		}
 	}
-}
 };
