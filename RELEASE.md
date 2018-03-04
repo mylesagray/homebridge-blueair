@@ -1,4 +1,8 @@
 # release notes
+## v0.1.2
+* Moved logging to debug only mode
+* Updated readme
+
 ## v0.1.1
 * Fixed faulty filter life calculation logic
 * Added auto polling every 5 minutes in background for historical use

@@ -230,7 +230,7 @@ module.exports = function(homebridge) {
 		httpRequest: function(options, callback) {
 			request(options,
 				function (error, response, body) {
-					this.log("Polled API:", options.url);
+					this.log.debug("Polled API:", options.url);
 					callback(error, response, body);
 				}.bind(this));
 		},
@@ -249,19 +249,19 @@ module.exports = function(homebridge) {
 				//Send request
 				this.httpRequest(options, function(error, response, body) {
 					if (error) {
-						this.log('HTTP function failed: %s', error);
+						this.log.debug('HTTP function failed: %s', error);
 						callback(error);
 					}
 					else {
 						var json = JSON.parse(body);
-						this.log("Got home region:", json);
+						this.log.debug("Got home region:", json);
 						this.gothomehost = 1;
 						this.homehost = json;
 						callback(null);
 					}
 				}.bind(this));
 			}else{
-				this.log("Already have region");
+				this.log.debug("Already have region");
 				callback(null);
 			}
 		},
@@ -281,19 +281,19 @@ module.exports = function(homebridge) {
 					//Send request
 					this.httpRequest(options, function(error, response, body) {
 						if (error) {
-							this.log('HTTP function failed: %s', error);
+							this.log.debug('HTTP function failed: %s', error);
 							callback(error);
 						}
 						else {
 							this.loggedin = 1;
-							this.log("Logged in to API");
+							this.log.debug("Logged in to API");
 							this.authtoken = response.headers['x-auth-token'];
 							callback(null);
 						}
 					}.bind(this));
 				}.bind(this));
 			} else {
-				this.log("Already logged in");
+				this.log.debug("Already logged in");
 				callback(null);
 			}
 		},
@@ -313,7 +313,7 @@ module.exports = function(homebridge) {
 					//Send request
 					this.httpRequest(options, function(error, response, body) {
 						if (error) {
-							this.log('HTTP function failed: %s', error);
+							this.log.debug('HTTP function failed: %s', error);
 							callback(error);
 						}
 						else {
@@ -326,13 +326,13 @@ module.exports = function(homebridge) {
 								callback(null);
 							}
 							this.havedeviceID = 1;
-							this.log("Got device ID"); 
-							//this.log("Found", numberofdevices, "appliance(s)");
+							this.log.debug("Got device ID"); 
+							//this.log.debug("Found", numberofdevices, "appliance(s)");
 						}
 					}.bind(this));
 				}.bind(this));
 			} else {
-				this.log("Already have device ID");
+				this.log.debug("Already have device ID");
 				callback(null);
 			}
 		},
@@ -358,7 +358,7 @@ module.exports = function(homebridge) {
 				//Send request
 				this.httpRequest(options, function(error, response, body) {
 					if (error) {
-						this.log('HTTP function failed: %s', error);
+						this.log.debug('HTTP function failed: %s', error);
 						callback(error);
 					}
 					else {
@@ -367,7 +367,7 @@ module.exports = function(homebridge) {
 							obj[prop.name] = prop.currentValue;
 							return obj;
 						}, {});
-						this.log("Got device settings")
+						this.log.debug("Got device settings")
 						this.havedevicesettings = 1;
 						this.lastSettingRefresh = new Date();
 						callback(null);
@@ -375,7 +375,7 @@ module.exports = function(homebridge) {
 				}.bind(this));
 			}.bind(this));
 				} else {
-					this.log("Already polled settings last 5 seconds, waiting.");
+					this.log.debug("Already polled settings last 5 seconds, waiting.");
 					callback(null);
 				}
 			}
@@ -402,7 +402,7 @@ module.exports = function(homebridge) {
 							//Send request
 							this.httpRequest(options, function(error, response, body) {
 								if (error) {
-									this.log('HTTP function failed: %s', error);
+									this.log.debug('HTTP function failed: %s', error);
 									callback(error);
 								}
 								else {
@@ -417,7 +417,7 @@ module.exports = function(homebridge) {
 							}.bind(this));
 						}.bind(this));
 				} else {
-					this.log("Device info polled in last 5 minutes, waiting.");
+					this.log.debug("Device info polled in last 5 minutes, waiting.");
 					callback(null);
 				}
 			}
@@ -444,7 +444,7 @@ module.exports = function(homebridge) {
 						//Send request
 						this.httpRequest(options, function(error, response, body) {
 							if (error) {
-								this.log('HTTP function failed: %s', error);
+								this.log.debug('HTTP function failed: %s', error);
 								callback(error);
 							}
 							else {
@@ -456,22 +456,22 @@ module.exports = function(homebridge) {
 									switch(json.sensors[i]) {
 										case "pm":
 										this.measurements.pm = json.datapoints[0][i];
-										//this.log("Particulate matter 2.5:", this.measurements.pm + " " + json.units[i]);
+										//this.log.debug("Particulate matter 2.5:", this.measurements.pm + " " + json.units[i]);
 										break;
 
 										case "tmp":
 										this.measurements.tmp = json.datapoints[0][i];
-										//this.log("Temperature:", this.measurements.tmp + " " + json.units[i]);
+										//this.log.debug("Temperature:", this.measurements.tmp + " " + json.units[i]);
 										break;
 
 										case "hum":
 										this.measurements.hum = json.datapoints[0][i];
-										//this.log("Humidity:", this.measurements.hum + " " + json.units[i]);
+										//this.log.debug("Humidity:", this.measurements.hum + " " + json.units[i]);
 										break;
 
 										case "co2":
 										this.measurements.co2 = json.datapoints[0][i];
-										//this.log("CO2:", this.measurements.co2 + " " + json.units[i]);
+										//this.log.debug("CO2:", this.measurements.co2 + " " + json.units[i]);
 										var levels = [
 										[99999, 2101, Characteristic.AirQuality.POOR],
 										[2100, 1601, Characteristic.AirQuality.INFERIOR],
@@ -489,12 +489,12 @@ module.exports = function(homebridge) {
 
 										case "voc":
 										this.measurements.voc = json.datapoints[0][i];
-										//this.log("Volatile organic compounds:", this.measurements.voc + " " + json.units[i]);
+										//this.log.debug("Volatile organic compounds:", this.measurements.voc + " " + json.units[i]);
 										break;
 
 										case "allpollu":
 										this.measurements.allpollu = item[1];
-										//this.log("All Pollution:", this.measurements.allpollu, json.units[i]);
+										//this.log.debug("All Pollution:", this.measurements.allpollu, json.units[i]);
 										break;
 
 										default:
@@ -510,7 +510,7 @@ module.exports = function(homebridge) {
 									humidity: this.measurements.hum,
 									ppm: this.measurements.airqualityppm
 								});
-								this.log("Sensor data refreshed");
+								this.log.debug("Sensor data refreshed");
 								callback(null);
 							}
 						}.bind(this));
@@ -518,7 +518,7 @@ module.exports = function(homebridge) {
 				}
 				else
 				{
-					this.log("Sensor data polled in last 5 minutes, waiting.");
+					this.log.debug("Sensor data polled in last 5 minutes, waiting.");
 					callback(null);
 				}
 			}
@@ -550,12 +550,12 @@ module.exports = function(homebridge) {
 						//Send request
 						this.httpRequest(options, function(error, response, body) {
 							if (error) {
-								this.log('HTTP function failed: %s', error);
+								this.log.debug('HTTP function failed: %s', error);
 								callback(error);
 							}
 							else {
 								var json = JSON.parse(body);
-								this.log("Downloaded " + json.datapoints.length + " datapoints for " + json.sensors.length + " senors");
+								this.log.debug("Downloaded " + json.datapoints.length + " datapoints for " + json.sensors.length + " senors");
 								for (i = 0; i < json.sensors.length; i++) {
 									this.historicalmeasurements.push([]);
 									switch(json.sensors[i]) {
@@ -611,7 +611,7 @@ module.exports = function(homebridge) {
 						}.bind(this));
 					}.bind(this));
 				} else {
-					this.log("Pulled historical data in last 30 mins, waiting");
+					this.log.debug("Pulled historical data in last 30 mins, waiting");
 					callback();
 				}
 			}
