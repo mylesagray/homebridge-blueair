@@ -35,15 +35,6 @@ LED Overview  | LED Detail | LED Brightness | CO2 Automation
 :------------:|:----------:|:--------------:|:---------------------:
 ![LED Overview](https://dl.dropboxusercontent.com/s/fn58gdei0zznngw/IMG_1336.png?dl=0) | ![LED Detail](https://dl.dropboxusercontent.com/s/ac7ykqptfpbpyny/IMG_1337.png?dl=0) | Needs implemented | ![CO2 Automation](https://dl.dropboxusercontent.com/s/14j4zdhgbpospl9/IMG_1338.png?dl=0)
 
-## API research
-There is no documented API for the BlueAir devices, through some API proxying with Charles I was able to find out they use the Foobot API backend for their intelligence and map all requests for get/set.
-
-### postman collection and environment
-I coallated all requests that my device made into an easy-to-use [Postman collection](https://www.getpostman.com/collections/1a8ff6c577e58a7b6f90).
-
-You need to create a Postman Environment with the following variables in it to use the collection:
-![Postman Environment](https://dl.dropboxusercontent.com/s/yu3lz7r47pe00ex/Screenshot%202018-03-04%2015.06.10.png?dl=0)
-
 ## configuration
 An explaination of the config is below, a `config-example.json` is also provided along with the plugin for ease of use.
 
@@ -73,6 +64,15 @@ see [RELEASE.md](https://github.com/mylesgray/homebridge-blueair/blob/master/REL
 
 ## todos
 see [open enhancement issues](https://github.com/mylesgray/homebridge-blueair/labels/enhancement)
+
+## API research
+There is no documented API for the BlueAir devices, through some API proxying with Charles I was able to find out they use the Foobot API backend for their intelligence and map all requests for get/set.
+
+### postman collection and environment
+I coallated all requests that my device made into an easy-to-use [Postman collection](https://www.getpostman.com/collections/1a8ff6c577e58a7b6f90).
+
+You need to create a Postman Environment with the following variables in it to use the collection:
+![Postman Environment](https://dl.dropboxusercontent.com/s/yu3lz7r47pe00ex/Screenshot%202018-03-04%2015.06.10.png?dl=0)
 
 ## thanks
 
