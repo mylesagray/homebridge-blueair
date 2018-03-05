@@ -17,6 +17,7 @@ module.exports = function(homebridge) {
 		this.apikey = config.apikey;
 		this.password = config.password;
 		this.appliance = {};
+		this.appliance.info = {};
 		this.historicalmeasurements = [];
 		this.name = config.name || 'Air Purifier';
 		this.displayName = config.name;
@@ -80,8 +81,9 @@ module.exports = function(homebridge) {
 
 		this.serviceInfo
 		.setCharacteristic(Characteristic.Manufacturer, 'BlueAir')
-		.setCharacteristic(Characteristic.Model, 'Air Purifier')
-		.setCharacteristic(Characteristic.SerialNumber, 'Undefined');
+		.setCharacteristic(Characteristic.Model, this.appliance.info.compatibility)
+		.setCharacteristic(Characteristic.SerialNumber, this.appliance.info.uuid)
+		.setCharacteristic(Characteristic.FirmwareRevision, this.appliance.info.firmware);
 
 		this.services.push(this.service);
 		this.services.push(this.serviceInfo);
@@ -93,6 +95,12 @@ module.exports = function(homebridge) {
 		.getCharacteristic(Characteristic.On)
 		.on('get', this.getLED.bind(this))
 		.on('set', this.setLED.bind(this))
+		.getDefaultValue();
+
+		this.lightBulbService
+		.getCharacteristic(Characteristic.Brightness)
+		.on('get', this.getLEDBrightness.bind(this))
+		.on('set', this.setLEDBrightness.bind(this))
 		.getDefaultValue();
 
 		this.services.push(this.lightBulbService);
@@ -355,25 +363,25 @@ module.exports = function(homebridge) {
 								'X-AUTH-TOKEN': this.authtoken
 							}
 						};
-				//Send request
-				this.httpRequest(options, function(error, response, body) {
-					if (error) {
-						this.log.debug('HTTP function failed: %s', error);
-						callback(error);
-					}
-					else {
-						var json = JSON.parse(body);
-						this.appliance = json.reduce(function(obj, prop) {
-							obj[prop.name] = prop.currentValue;
-							return obj;
-						}, {});
-						this.log.debug("Got device settings")
-						this.havedevicesettings = 1;
-						this.lastSettingRefresh = new Date();
-						callback(null);
-					}
-				}.bind(this));
-			}.bind(this));
+						//Send request
+						this.httpRequest(options, function(error, response, body) {
+							if (error) {
+								this.log.debug('HTTP function failed: %s', error);
+								callback(error);
+							}
+							else {
+								var json = JSON.parse(body);
+								this.appliance = json.reduce(function(obj, prop) {
+									obj[prop.name] = prop.currentValue;
+									return obj;
+								}, {});
+								this.log.debug("Got device settings");
+								this.havedevicesettings = 1;
+								this.lastSettingRefresh = new Date();
+								callback(null);
+							}
+						}.bind(this));
+					}.bind(this));
 				} else {
 					this.log.debug("Already polled settings last 5 seconds, waiting.");
 					callback(null);
@@ -399,23 +407,25 @@ module.exports = function(homebridge) {
 								'X-AUTH-TOKEN': this.authtoken
 							}
 						};
-							//Send request
-							this.httpRequest(options, function(error, response, body) {
-								if (error) {
-									this.log.debug('HTTP function failed: %s', error);
-									callback(error);
-								}
-								else {
-									var json = JSON.parse(body);
-									var filterusageindays = Math.round(((json.initUsagePeriod/60)/60)/24);
-									var filterlifeleft = (180 - filterusageindays);
-									this.appliance.filterlevel = 100* (filterlifeleft / 180);
-									this.havedeviceInfo = 1;
-									this.lastInfoRefresh = new Date();
-									callback(null);
-								}
-							}.bind(this));
+						//Send request
+						this.httpRequest(options, function(error, response, body) {
+							if (error) {
+								this.log.debug('HTTP function failed: %s', error);
+								callback(error);
+							}
+							else {
+								var json = JSON.parse(body);
+								this.appliance.info = json;
+								this.log.debug("Got device info");
+								var filterusageindays = Math.round(((this.appliance.info.initUsagePeriod/60)/60)/24);
+								var filterlifeleft = (180 - filterusageindays);
+								this.appliance.filterlevel = 100* (filterlifeleft / 180);
+								this.havedeviceInfo = 1;
+								this.lastInfoRefresh = new Date();
+								callback(null);
+							}
 						}.bind(this));
+					}.bind(this));
 				} else {
 					this.log.debug("Device info polled in last 5 minutes, waiting.");
 					callback(null);
@@ -777,6 +787,29 @@ module.exports = function(homebridge) {
 		},
 
 		setLED: function(callback) {
+			//set LED
+			return;
+		},
+
+		getLEDBrightness: function(callback) {
+			this.getBlueAirSettings(function(){
+				if (this.appliance.brightness == 0){
+					callback(null, 0);
+				} else if (this.appliance.brightness == 1) {
+					callback(null, 25);
+				} else if (this.appliance.brightness == 2) {
+					callback(null, 50);
+				}	else if (this.appliance.brightness == 3) {
+					callback(null, 75);
+				}	else if (this.appliance.brightness == 4) {
+					callback(null, 100);
+				} else {
+					callback(err);
+				}
+			}.bind(this));
+		},
+
+		setLEDBrightness: function(callback) {
 			//set LED
 			return;
 		},
