@@ -786,9 +786,44 @@ module.exports = function(homebridge) {
 			}.bind(this));
 		},
 
-		setLED: function(callback) {
-			//set LED
-			return;
+		setLED: function(state, callback) {
+			//Set brightness to full if turned on, set to 0 if off
+			if(state == true){
+				this.LEDState = 4;
+			} else if (state == false){
+				this.LEDState = 0;
+			}
+
+			//Build POST request body
+			var requestbody = {
+				"currentValue": this.LEDState,
+				"scope": "device",
+				"defaultValue": this.LEDState,
+				"name": "brightness",
+				"uuid": this.deviceuuid
+			}
+
+			//Build POST request
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/brightness/',
+				method: 'post',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				},
+				json: requestbody
+			};
+
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log.debug('HTTP function failed: %s', error);
+					callback(error);
+					}
+				else {
+					callback(null);
+				}
+			}.bind(this));
 		},
 
 		getLEDBrightness: function(callback) {
