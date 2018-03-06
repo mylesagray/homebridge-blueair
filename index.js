@@ -744,9 +744,44 @@ module.exports = function(homebridge) {
 			}.bind(this));
 		},
 
-		setActive: function(callback) {
-			//turn off
-			return;
+		setActive: function(state, callback) {
+			//Set fan to last read value if turned on, set to 0 if turned off
+			if(state == true){
+				this.fanState = this.appliance.fan_speed;
+			} else if (state == false){
+				this.fanState = 0;
+			}
+
+			//Build POST request body
+			var requestbody = {
+				"currentValue": this.fanState,
+				"scope": "device",
+				"defaultValue": this.fanState,
+				"name": "fan_speed",
+				"uuid": this.deviceuuid
+			}
+
+			//Build POST request
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/fanspeed/',
+				method: 'post',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				},
+				json: requestbody
+			};
+
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log.debug('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					callback(null);
+				}
+			}.bind(this));
 		},
 
 		getFilterLife: function(callback) {
@@ -771,9 +806,53 @@ module.exports = function(homebridge) {
 			}.bind(this));
 		},
 
-		setRotationSpeed: function(callback) {
-			//set fan
-			return;
+		setRotationSpeed: function(fan_speed, callback) {
+			//Correlate percentages to fan levels in API
+			//[high threshold, low threshold, API fan level]
+			var levels = [
+			[67, 100, 3],
+			[34, 66, 2],
+			[1, 33, 1],
+			[0, 0 , 0]
+			];
+
+			//Set fan speed based on percentage passed
+			for(var item of levels){
+				if(fan_speed >= item[0] && fan_speed <= item[1]){
+					this.appliance.fan_speed = item[2];
+				}
+			}
+
+			//Build POST request body
+			var requestbody = {
+				"currentValue": this.appliance.fan_speed,
+				"scope": "device",
+				"defaultValue": this.appliance.fan_speed,
+				"name": "fan_speed",
+				"uuid": this.deviceuuid
+			}
+
+			//Build POST request
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/fanspeed/',
+				method: 'post',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				},
+				json: requestbody
+			};
+
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log.debug('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					callback(null);
+				}
+			}.bind(this));
 		},
 
 		getLED: function(callback) {
@@ -787,7 +866,7 @@ module.exports = function(homebridge) {
 		},
 
 		setLED: function(state, callback) {
-			//Set brightness to full if turned on, set to 0 if off
+			//Set brightness last read value if turned on, set to 0 if off
 			if(state == true){
 				this.LEDState = this.appliance.brightness;
 			} else if (state == false){
@@ -846,12 +925,13 @@ module.exports = function(homebridge) {
 
 		setLEDBrightness: function(brightness, callback) {
 			//Correlate percentages to LED brightness levels in API
+			//[high threshold, low threshold, API brightness level]
 			var levels = [
 			[76, 100, 4],
 			[51, 75, 3],
 			[26, 50, 2],
 			[1, 25, 1],
-			[0, 0 ,0]
+			[0, 0 , 0]
 			];
 
 			//Set brightness based on percentage passed
