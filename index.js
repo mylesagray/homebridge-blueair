@@ -700,9 +700,43 @@ module.exports = function(homebridge) {
 			}.bind(this));
 		},
 
-		setLockPhysicalControls: function(callback) {
-			//Set lock
-			return;
+		setLockPhysicalControls: function(state, callback) {
+			if(state == true){
+				this.LockState = 1;
+			} else if (state == false){
+				this.LockState = 0;
+			}
+
+			//Build POST request body
+			var requestbody = {
+				"currentValue": this.LockState,
+				"scope": "device",
+				"defaultValue": this.LockState,
+				"name": "child_lock",
+				"uuid": this.deviceuuid
+			}
+
+			//Build POST request
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/child_lock/',
+				method: 'post',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				},
+				json: requestbody
+			};
+
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log.debug('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					callback(null);
+				}
+			}.bind(this));
 		},
 
 		getCurrentAirPurifierState: function(callback) {
@@ -722,48 +756,31 @@ module.exports = function(homebridge) {
 				} else if (this.appliance.mode == 'manual') {
 					callback(null, Characteristic.TargetAirPurifierState.MANUAL);
 				} else {
-					callback(err);
+					callback();
 				}
 			}.bind(this));
 		},
 
-		setTargetAirPurifierState: function(callback) {
-			//Set state
-			return;
-		},
-
-		getActive: function(callback) {
-			this.getBlueAirSettings(function(){
-				if (this.appliance.fan_speed == 0){
-					callback(null, Characteristic.Active.INACTIVE);
-				} else if (this.appliance.fan_speed >= 1 && this.appliance.fan_speed <= 3) {
-					callback(null, Characteristic.Active.ACTIVE);
-				} else {
-					callback(err);
-				}
-			}.bind(this));
-		},
-
-		setActive: function(state, callback) {
-			//Set fan to last read value if turned on, set to 0 if turned off
-			if(state == true){
-				this.fanState = this.appliance.fan_speed;
-			} else if (state == false){
-				this.fanState = 0;
+		setTargetAirPurifierState: function(state, callback) {
+			//Set fan to auto turned on without a speed set
+			if(state == false){
+				this.targetPurifierState = 'manual';
+			} else if (state == true){
+				this.targetPurifierState = 'auto';
 			}
 
 			//Build POST request body
 			var requestbody = {
-				"currentValue": this.fanState,
+				"currentValue": this.targetPurifierState,
 				"scope": "device",
-				"defaultValue": this.fanState,
-				"name": "fan_speed",
+				"defaultValue": this.targetPurifierState,
+				"name": "mode",
 				"uuid": this.deviceuuid
 			}
 
 			//Build POST request
 			var options = {
-				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/fanspeed/',
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/mode/',
 				method: 'post',
 				headers: {
 					'X-API-KEY-TOKEN': this.apikey,
@@ -782,6 +799,61 @@ module.exports = function(homebridge) {
 					callback(null);
 				}
 			}.bind(this));
+		},
+
+		getActive: function(callback) {
+			this.getBlueAirSettings(function(){
+				if (this.appliance.fan_speed == 0){
+					callback(null, Characteristic.Active.INACTIVE);
+				} else if (this.appliance.fan_speed >= 1 && this.appliance.fan_speed <= 3) {
+					callback(null, Characteristic.Active.ACTIVE);
+				} else {
+					callback(err);
+				}
+			}.bind(this));
+		},
+
+		setActive: function(state, callback) {
+			//Set fan to auto when turned on, else set fan_speed to 0
+			if (state == true) {
+				//Homekit automatically sets target fan state to auto
+				callback(null);
+
+			} else if (state == false) {
+
+				this.fanState = 0;
+
+				//Build POST request body
+				var requestbody = {
+					"currentValue": this.fanState,
+					"scope": "device",
+					"defaultValue": this.fanState,
+					"name": "fan_speed",
+					"uuid": this.deviceuuid
+				}
+
+				//Build POST request
+				var options = {
+					url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/fanspeed/',
+					method: 'post',
+					headers: {
+						'X-API-KEY-TOKEN': this.apikey,
+						'X-AUTH-TOKEN': this.authtoken
+					},
+					json: requestbody
+				};
+
+				//Send request
+				this.httpRequest(options, function(error, response, body) {
+					if (error) {
+						this.log.debug('HTTP function failed: %s', error);
+						callback(error);
+					}
+					else {
+						callback(null);
+					}
+				}.bind(this));
+			}
 		},
 
 		getFilterLife: function(callback) {
