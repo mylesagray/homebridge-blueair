@@ -815,11 +815,11 @@ module.exports = function(homebridge) {
 
 		setActive: function(state, callback) {
 			//Set fan to auto when turned on, else set fan_speed to 0
-			if (state == true) {
-				//Homekit automatically sets target fan state to auto
-				callback(null);
-
-			} else if (state == false) {
+			if (state == 1) {
+				this.setTargetAirPurifierState(1, function(){
+					callback(null);
+				}.bind(this));
+			} else if (state == 0) {
 
 				this.fanState = 0;
 
@@ -940,7 +940,11 @@ module.exports = function(homebridge) {
 		setLED: function(state, callback) {
 			//Set brightness last read value if turned on, set to 0 if off
 			if(state == true){
-				this.LEDState = this.appliance.brightness;
+				if(this.appliance.brightness != 0){
+					this.LEDState = this.appliance.brightness;
+				} else {
+					this.LEDState = 4;
+				}
 			} else if (state == false){
 				this.LEDState = 0;
 			}
