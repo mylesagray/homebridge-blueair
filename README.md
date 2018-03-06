@@ -33,7 +33,7 @@ Humidity Overview  | Humidity Detail | CO2 Overview | CO2 Detail
 
 LED Overview  | LED Detail | LED Brightness | CO2 Automation
 :------------:|:----------:|:--------------:|:---------------------:
-![LED Overview](https://dl.dropboxusercontent.com/s/fn58gdei0zznngw/IMG_1336.png?dl=0) | ![LED Detail](https://dl.dropboxusercontent.com/s/ac7ykqptfpbpyny/IMG_1337.png?dl=0) | Needs implemented | ![CO2 Automation](https://dl.dropboxusercontent.com/s/14j4zdhgbpospl9/IMG_1338.png?dl=0)
+![LED Overview](https://dl.dropboxusercontent.com/s/fn58gdei0zznngw/IMG_1336.png?dl=0) | ![LED Detail](https://dl.dropboxusercontent.com/s/w1cyj3vukeq8jij/IMG_1341.png?dl=0) | ![LED Brightness](https://dl.dropboxusercontent.com/s/jd4ugcml1lktv8c/IMG_1340.png?dl=0) | ![CO2 Automation](https://dl.dropboxusercontent.com/s/14j4zdhgbpospl9/IMG_1338.png?dl=0)
 
 ## Configuration
 
