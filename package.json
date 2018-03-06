@@ -24,10 +24,5 @@
   },
   "scripts": {
     "release": "generate-release"
-  },
-  "config": {
-    "generateRelease": {
-      "skip_git_flow_finish": true
-    }
   }
 }
