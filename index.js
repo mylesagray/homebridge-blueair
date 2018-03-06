@@ -700,9 +700,43 @@ module.exports = function(homebridge) {
 			}.bind(this));
 		},
 
-		setLockPhysicalControls: function(callback) {
-			//Set lock
-			return;
+		setLockPhysicalControls: function(state, callback) {
+			if(state == true){
+				this.LockState = 1;
+			} else if (state == false){
+				this.LockState = 0;
+			}
+
+			//Build POST request body
+			var requestbody = {
+				"currentValue": this.LockState,
+				"scope": "device",
+				"defaultValue": this.LockState,
+				"name": "child_lock",
+				"uuid": this.deviceuuid
+			}
+
+			//Build POST request
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/child_lock/',
+				method: 'post',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				},
+				json: requestbody
+			};
+
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log.debug('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					callback(null);
+				}
+			}.bind(this));
 		},
 
 		getCurrentAirPurifierState: function(callback) {
@@ -722,14 +756,49 @@ module.exports = function(homebridge) {
 				} else if (this.appliance.mode == 'manual') {
 					callback(null, Characteristic.TargetAirPurifierState.MANUAL);
 				} else {
-					callback(err);
+					callback();
 				}
 			}.bind(this));
 		},
 
-		setTargetAirPurifierState: function(callback) {
-			//Set state
-			return;
+		setTargetAirPurifierState: function(state, callback) {
+			//Set fan to auto turned on without a speed set
+			if(state == false){
+				this.targetPurifierState = 'manual';
+			} else if (state == true){
+				this.targetPurifierState = 'auto';
+			}
+
+			//Build POST request body
+			var requestbody = {
+				"currentValue": this.targetPurifierState,
+				"scope": "device",
+				"defaultValue": this.targetPurifierState,
+				"name": "mode",
+				"uuid": this.deviceuuid
+			}
+
+			//Build POST request
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/mode/',
+				method: 'post',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				},
+				json: requestbody
+			};
+
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log.debug('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					callback(null);
+				}
+			}.bind(this));
 		},
 
 		getActive: function(callback) {
@@ -744,9 +813,47 @@ module.exports = function(homebridge) {
 			}.bind(this));
 		},
 
-		setActive: function(callback) {
-			//turn off
-			return;
+		setActive: function(state, callback) {
+			//Set fan to auto when turned on, else set fan_speed to 0
+			if (state == 1) {
+				this.setTargetAirPurifierState(1, function(){
+					callback(null);
+				}.bind(this));
+			} else if (state == 0) {
+
+				this.fanState = 0;
+
+				//Build POST request body
+				var requestbody = {
+					"currentValue": this.fanState,
+					"scope": "device",
+					"defaultValue": this.fanState,
+					"name": "fan_speed",
+					"uuid": this.deviceuuid
+				}
+
+				//Build POST request
+				var options = {
+					url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/fanspeed/',
+					method: 'post',
+					headers: {
+						'X-API-KEY-TOKEN': this.apikey,
+						'X-AUTH-TOKEN': this.authtoken
+					},
+					json: requestbody
+				};
+
+				//Send request
+				this.httpRequest(options, function(error, response, body) {
+					if (error) {
+						this.log.debug('HTTP function failed: %s', error);
+						callback(error);
+					}
+					else {
+						callback(null);
+					}
+				}.bind(this));
+			}
 		},
 
 		getFilterLife: function(callback) {
@@ -771,9 +878,53 @@ module.exports = function(homebridge) {
 			}.bind(this));
 		},
 
-		setRotationSpeed: function(callback) {
-			//set fan
-			return;
+		setRotationSpeed: function(fan_speed, callback) {
+			//Correlate percentages to fan levels in API
+			//[high threshold, low threshold, API fan level]
+			var levels = [
+			[67, 100, 3],
+			[34, 66, 2],
+			[1, 33, 1],
+			[0, 0 , 0]
+			];
+
+			//Set fan speed based on percentage passed
+			for(var item of levels){
+				if(fan_speed >= item[0] && fan_speed <= item[1]){
+					this.appliance.fan_speed = item[2];
+				}
+			}
+
+			//Build POST request body
+			var requestbody = {
+				"currentValue": this.appliance.fan_speed,
+				"scope": "device",
+				"defaultValue": this.appliance.fan_speed,
+				"name": "fan_speed",
+				"uuid": this.deviceuuid
+			}
+
+			//Build POST request
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/fanspeed/',
+				method: 'post',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				},
+				json: requestbody
+			};
+
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log.debug('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					callback(null);
+				}
+			}.bind(this));
 		},
 
 		getLED: function(callback) {
@@ -787,9 +938,13 @@ module.exports = function(homebridge) {
 		},
 
 		setLED: function(state, callback) {
-			//Set brightness to full if turned on, set to 0 if off
+			//Set brightness last read value if turned on, set to 0 if off
 			if(state == true){
-				this.LEDState = 4;
+				if(this.appliance.brightness != 0){
+					this.LEDState = this.appliance.brightness;
+				} else {
+					this.LEDState = 4;
+				}
 			} else if (state == false){
 				this.LEDState = 0;
 			}
@@ -819,7 +974,7 @@ module.exports = function(homebridge) {
 				if (error) {
 					this.log.debug('HTTP function failed: %s', error);
 					callback(error);
-					}
+				}
 				else {
 					callback(null);
 				}
@@ -844,9 +999,54 @@ module.exports = function(homebridge) {
 			}.bind(this));
 		},
 
-		setLEDBrightness: function(callback) {
-			//set LED
-			return;
+		setLEDBrightness: function(brightness, callback) {
+			//Correlate percentages to LED brightness levels in API
+			//[high threshold, low threshold, API brightness level]
+			var levels = [
+			[76, 100, 4],
+			[51, 75, 3],
+			[26, 50, 2],
+			[1, 25, 1],
+			[0, 0 , 0]
+			];
+
+			//Set brightness based on percentage passed
+			for(var item of levels){
+				if(brightness >= item[0] && brightness <= item[1]){
+					this.LEDState = item[2];
+				}
+			}
+
+			//Build POST request body
+			var requestbody = {
+				"currentValue": this.LEDState,
+				"scope": "device",
+				"defaultValue": this.LEDState,
+				"name": "brightness",
+				"uuid": this.deviceuuid
+			}
+
+			//Build POST request
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/brightness/',
+				method: 'post',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				},
+				json: requestbody
+			};
+
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log.debug('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					callback(null);
+				}
+			}.bind(this));
 		},
 
 		getServices: function() {
