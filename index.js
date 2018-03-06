@@ -789,7 +789,7 @@ module.exports = function(homebridge) {
 		setLED: function(state, callback) {
 			//Set brightness to full if turned on, set to 0 if off
 			if(state == true){
-				this.LEDState = 4;
+				this.LEDState = this.appliance.brightness;
 			} else if (state == false){
 				this.LEDState = 0;
 			}
@@ -819,7 +819,7 @@ module.exports = function(homebridge) {
 				if (error) {
 					this.log.debug('HTTP function failed: %s', error);
 					callback(error);
-					}
+				}
 				else {
 					callback(null);
 				}
@@ -844,9 +844,53 @@ module.exports = function(homebridge) {
 			}.bind(this));
 		},
 
-		setLEDBrightness: function(callback) {
-			//set LED
-			return;
+		setLEDBrightness: function(brightness, callback) {
+			//Correlate percentages to LED brightness levels in API
+			var levels = [
+			[76, 100, 4],
+			[51, 75, 3],
+			[26, 50, 2],
+			[1, 25, 1],
+			[0, 0 ,0]
+			];
+
+			//Set brightness based on percentage passed
+			for(var item of levels){
+				if(brightness >= item[0] && brightness <= item[1]){
+					this.LEDState = item[2];
+				}
+			}
+
+			//Build POST request body
+			var requestbody = {
+				"currentValue": this.LEDState,
+				"scope": "device",
+				"defaultValue": this.LEDState,
+				"name": "brightness",
+				"uuid": this.deviceuuid
+			}
+
+			//Build POST request
+			var options = {
+				url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/attribute/brightness/',
+				method: 'post',
+				headers: {
+					'X-API-KEY-TOKEN': this.apikey,
+					'X-AUTH-TOKEN': this.authtoken
+				},
+				json: requestbody
+			};
+
+			//Send request
+			this.httpRequest(options, function(error, response, body) {
+				if (error) {
+					this.log.debug('HTTP function failed: %s', error);
+					callback(error);
+				}
+				else {
+					callback(null);
+				}
+			}.bind(this));
 		},
 
 		getServices: function() {
