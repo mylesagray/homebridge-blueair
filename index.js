@@ -1,8 +1,10 @@
 var request = require("request");
+var os = require('os');
 var inherits = require('util').inherits;
 var Service, Characteristic;
 const moment = require('moment');
 var CustomCharacteristic = {};
+var hostname = os.hostname();
 
 module.exports = function(homebridge) {
 	var FakeGatoHistoryService = require('fakegato-history')(homebridge);
@@ -82,7 +84,7 @@ module.exports = function(homebridge) {
 		this.serviceInfo
 		.setCharacteristic(Characteristic.Manufacturer, 'BlueAir')
 		.setCharacteristic(Characteristic.Model, this.appliance.info.compatibility)
-		.setCharacteristic(Characteristic.SerialNumber, this.appliance.info.uuid)
+		.setCharacteristic(Characteristic.SerialNumber, hostname + "-" + this.appliance.info.uuid)
 		.setCharacteristic(Characteristic.FirmwareRevision, this.appliance.info.firmware);
 
 		this.services.push(this.service);
@@ -617,6 +619,15 @@ module.exports = function(homebridge) {
 								}
 								this.lastHistoricalRefresh = new Date();
 								callback(null);
+							}
+							//Load historicals from API into Elgato
+							for (var i = 0; i < this.historicalmeasurements[0].length; i++){
+								this.loggingService._addEntry({
+									time: this.historicalmeasurements[0][i],
+									temp: this.historicalmeasurements[2][i],
+									humidity: this.historicalmeasurements[3][i],
+									ppm: this.historicalmeasurements[4][i]
+								});
 							}
 						}.bind(this));
 					}.bind(this));
