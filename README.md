@@ -47,6 +47,8 @@ npm install homebridge-blueair
 
 An explaination of the config is below, a `config-example.json` is also provided along with the plugin for ease of use.
 
+For instructions on how to retrieve your apikey [see here](https://github.com/mylesgray/homebridge-blueair/wiki/API_Key).
+
 ```
   {
     "accessory": "BlueAir",
