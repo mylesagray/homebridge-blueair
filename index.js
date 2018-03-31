@@ -1,8 +1,12 @@
 var request = require("request");
+var os = require('os');
+var fs = require('fs');
+var path = require('path');
 var inherits = require('util').inherits;
 var Service, Characteristic;
 const moment = require('moment');
 var CustomCharacteristic = {};
+var hostname = os.hostname();
 
 module.exports = function(homebridge) {
 	var FakeGatoHistoryService = require('fakegato-history')(homebridge);
@@ -82,7 +86,7 @@ module.exports = function(homebridge) {
 		this.serviceInfo
 		.setCharacteristic(Characteristic.Manufacturer, 'BlueAir')
 		.setCharacteristic(Characteristic.Model, this.appliance.info.compatibility)
-		.setCharacteristic(Characteristic.SerialNumber, this.appliance.info.uuid)
+		.setCharacteristic(Characteristic.SerialNumber, hostname + "-" + this.appliance.info.uuid)
 		.setCharacteristic(Characteristic.FirmwareRevision, this.appliance.info.firmware);
 
 		this.services.push(this.service);
@@ -550,7 +554,8 @@ module.exports = function(homebridge) {
 						var tsnow = timenow.toISOString();
 						var tslastmonth = timelastmonth.toISOString();
 						var options = {
-							url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/datapoint/' + tslastmonth + '/' + tsnow + '/0/',
+							//Get datapoints rounded to 600s as higher resolution reduces history in Eve
+							url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/datapoint/' + tslastmonth + '/' + tsnow + '/600/',
 							method: 'get',
 							headers: {
 								'X-API-KEY-TOKEN': this.apikey,
@@ -617,6 +622,34 @@ module.exports = function(homebridge) {
 								}
 								this.lastHistoricalRefresh = new Date();
 								callback(null);
+							}
+							//Add filesystem writer to create persistent record of historical import
+							fs.file = path.join(os.homedir(),'.homebridge/history-already-imported.txt');
+							fileExists = fs.readFile(fs.file, function(error) {
+								this.log.debug("Persistence file does not exist")
+							}.bind(this));
+							
+							//Only run once (i.e. as long as persistence file doesn't exist)
+							if (!fileExists){
+
+								//Load historicals from API into Elgato
+								for (var i = 0; i < this.historicalmeasurements[0].length; i++){
+									this.loggingService._addEntry({
+										time: this.historicalmeasurements[0][i],
+										temp: this.historicalmeasurements[2][i],
+										humidity: this.historicalmeasurements[3][i],
+										ppm: this.historicalmeasurements[4][i]
+									});
+								}
+
+								//touch filesystem to show this has already run once
+								fileContents = "Do not delete unless you want to re-import everything";
+								fs.writeFile(fs.file, fileContents, function(err, callback) {
+									if (err) throw err;
+									this.log.debug("Historical data imported");
+								}.bind(this));
+							} else {
+								this.log.debug("Historical import has previously run, not importing.");
 							}
 						}.bind(this));
 					}.bind(this));
