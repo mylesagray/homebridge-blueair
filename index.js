@@ -554,7 +554,8 @@ module.exports = function(homebridge) {
 						var tsnow = timenow.toISOString();
 						var tslastmonth = timelastmonth.toISOString();
 						var options = {
-							url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/datapoint/' + tslastmonth + '/' + tsnow + '/0/',
+							//Get datapoints rounded to 600s as higher resolution reduces history in Eve
+							url: 'https://' + this.homehost + '/v2/device/' + this.deviceuuid + '/datapoint/' + tslastmonth + '/' + tsnow + '/600/',
 							method: 'get',
 							headers: {
 								'X-API-KEY-TOKEN': this.apikey,
