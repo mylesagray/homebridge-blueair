@@ -652,16 +652,6 @@ module.exports = function(homebridge) {
 									});
 								}
 
-								
-
-								//touch filesystem to show this has already run once
-								var fileContents = "Do not delete unless you want to re-import everything";
-
-								fs.writeFile(fs.file, fileContents, function(err) {
-									if (err) throw err;
-									this.log.debug("Historical data imported");
-								}.bind(this));
-
 							} else {
 
 								this.log.debug("Historical import has previously run, not importing.");
