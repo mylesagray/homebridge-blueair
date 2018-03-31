@@ -222,14 +222,16 @@ module.exports = function(homebridge) {
 			//Fakegato-history masquerading as Eve Room.
 			//Stores history on local filesystem of homebridge appliance
 			this.loggingService = new FakeGatoHistoryService("room", this, {
-				storage:'fs'
+				size:10000,
+				storage:'fs',
+				disableTimer:true
 			});
 			this.services.push(this.loggingService);
 		}
 
-		//Poll info on first run and every 5 minutes
+		//Poll info on first run and every 10 minutes
 		this.getAllState();
-		setInterval(this.getAllState.bind(this), 300000);
+		setInterval(this.getAllState.bind(this), 600000);
 	}
 
 
@@ -548,8 +550,10 @@ module.exports = function(homebridge) {
 
 			if(typeof this.lastHistoricalRefresh !== 'undefined' || typeof this.historicalmeasurements[0] == 'undefined') {
 				if(time > this.lastHistoricalRefresh || typeof this.historicalmeasurements[0] == 'undefined') {
+
 					//Build the request and use returned value
 					this.getBlueAirID(function(){
+
 						var timenow = new Date();
 						var timelastmonth = new Date();
 						timelastmonth.setMonth(timelastmonth.getMonth() - 1);
@@ -566,11 +570,15 @@ module.exports = function(homebridge) {
 						};
 						//Send request
 						this.httpRequest(options, function(error, response, body) {
+
 							if (error) {
+
 								this.log.debug('HTTP function failed: %s', error);
 								callback(error);
+
 							}
 							else {
+
 								var json = JSON.parse(body);
 								this.log.debug("Downloaded " + json.datapoints.length + " datapoints for " + json.sensors.length + " senors");
 								for (let i = 0; i < json.sensors.length; i++) {
@@ -622,21 +630,21 @@ module.exports = function(homebridge) {
 										break;
 									}
 								}
+
 								this.lastHistoricalRefresh = new Date();
 								callback(null);
 							}
+
 							//Add filesystem writer to create persistent record of historical import
 							fs.file = path.join(os.homedir(),'.homebridge/history-already-imported.txt');
-							var fileExists = fs.readFile(fs.file, function() {
-								this.log.debug("Persistence file does not exist");
-							}.bind(this));
-							
-							//Only run once (i.e. as long as persistence file doesn't exist)
-							if (!fileExists){
 
-								//Load historicals from API into Elgato
+							//Only run once (i.e. as long as persistence file doesn't exist)
+							if (fs.existsSync(fs.file) === false){
+								
+								//Load historicals from API into Elgato synchronously
+
 								for (let i = 0; i < this.historicalmeasurements[0].length; i++){
-									this.loggingService._addEntry({
+									this.loggingService.addEntry({
 										time: this.historicalmeasurements[0][i],
 										temp: this.historicalmeasurements[2][i],
 										humidity: this.historicalmeasurements[3][i],
@@ -644,21 +652,31 @@ module.exports = function(homebridge) {
 									});
 								}
 
+								
+
 								//touch filesystem to show this has already run once
 								var fileContents = "Do not delete unless you want to re-import everything";
+
 								fs.writeFile(fs.file, fileContents, function(err) {
 									if (err) throw err;
 									this.log.debug("Historical data imported");
 								}.bind(this));
+
 							} else {
+
 								this.log.debug("Historical import has previously run, not importing.");
+
 							}
+
 						}.bind(this));
+
 					}.bind(this));
-				} else {
-					this.log.debug("Pulled historical data in last 30 mins, waiting");
-					callback();
+
 				}
+
+			} else {
+				this.log.debug("Pulled historical data in last 30 mins, waiting");
+				callback();
 			}
 		},
 
