@@ -636,7 +636,7 @@ module.exports = function(homebridge) {
 							}
 
 							//Add filesystem writer to create persistent record of historical import
-							fs.file = path.join(os.homedir(),'.homebridge/history-already-imported.txt');
+							fs.file = './history-already-imported.txt';
 
 							//Only run once (i.e. as long as persistence file doesn't exist)
 							if (fs.existsSync(fs.file) === false){
