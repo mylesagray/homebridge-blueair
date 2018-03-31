@@ -1,10 +1,12 @@
+/* jshint node: true */
+"use strict";
 var request = require("request");
 var os = require('os');
 var fs = require('fs');
 var path = require('path');
 var inherits = require('util').inherits;
 var Service, Characteristic;
-const moment = require('moment');
+var moment = require('moment');
 var CustomCharacteristic = {};
 var hostname = os.hostname();
 
@@ -233,7 +235,7 @@ module.exports = function(homebridge) {
 
 	BlueAir.prototype = {
 
-		getAllState: function(callback){
+		getAllState: function(){
 			this.getBlueAirSettings(function(){});
 			this.getBlueAirInfo(function(){});
 			this.getLatestValues(function(){});
@@ -242,7 +244,7 @@ module.exports = function(homebridge) {
 		httpRequest: function(options, callback) {
 			request(options,
 				function (error, response, body) {
-					this.log.debug("Polled API:", options.url);
+					this.log.debug("Polled API:", options.url, options.json);
 					callback(error, response, body);
 				}.bind(this));
 		},
@@ -291,7 +293,7 @@ module.exports = function(homebridge) {
 						}
 					};
 					//Send request
-					this.httpRequest(options, function(error, response, body) {
+					this.httpRequest(options, function(error, response) {
 						if (error) {
 							this.log.debug('HTTP function failed: %s', error);
 							callback(error);
@@ -331,7 +333,7 @@ module.exports = function(homebridge) {
 						else {
 							var json = JSON.parse(body);
 							var numberofdevices = '';
-							for (i = 0; i < json.length; i++){
+							for (let i = 0; i < json.length; i++){
 								this.deviceuuid = json[i].uuid;
 								this.devicename = json[i].name;
 								numberofdevices += 1;
@@ -466,7 +468,7 @@ module.exports = function(homebridge) {
 								var json = JSON.parse(body);
 								this.lastSensorRefresh = new Date();
 
-								for (i = 0; i < json.sensors.length; i++) {
+								for (let i = 0; i < json.sensors.length; i++) {
 									switch(json.sensors[i]) {
 										case "pm":
 										this.measurements.pm = json.datapoints[0][i];
@@ -571,47 +573,47 @@ module.exports = function(homebridge) {
 							else {
 								var json = JSON.parse(body);
 								this.log.debug("Downloaded " + json.datapoints.length + " datapoints for " + json.sensors.length + " senors");
-								for (i = 0; i < json.sensors.length; i++) {
+								for (let i = 0; i < json.sensors.length; i++) {
 									this.historicalmeasurements.push([]);
 									switch(json.sensors[i]) {
 										case "time":
-										for (j = 0; j < json.datapoints.length; j++){
+										for (let j = 0; j < json.datapoints.length; j++){
 											this.historicalmeasurements[i][j] = json.datapoints[j][i];
 										}
 										break;
 
 										case "pm":
-										for (j = 0; j < json.datapoints.length; j++){
+										for (let j = 0; j < json.datapoints.length; j++){
 											this.historicalmeasurements[i][j] = json.datapoints[j][i];
 										}
 										break;
 
 										case "tmp":
-										for (j = 0; j < json.datapoints.length; j++){
+										for (let j = 0; j < json.datapoints.length; j++){
 											this.historicalmeasurements[i][j] = json.datapoints[j][i];
 										}
 										break;
 
 										case "hum":
-										for (j = 0; j < json.datapoints.length; j++){
+										for (let j = 0; j < json.datapoints.length; j++){
 											this.historicalmeasurements[i][j] = json.datapoints[j][i];
 										}
 										break;
 
 										case "co2":
-										for (j = 0; j < json.datapoints.length; j++){
+										for (let j = 0; j < json.datapoints.length; j++){
 											this.historicalmeasurements[i][j] = json.datapoints[j][i];
 										}
 										break;
 
 										case "voc":
-										for (j = 0; j < json.datapoints.length; j++){
+										for (let j = 0; j < json.datapoints.length; j++){
 											this.historicalmeasurements[i][j] = json.datapoints[j][i];
 										}
 										break;
 
 										case "allpollu":
-										for (j = 0; j < json.datapoints.length; j++){
+										for (let j = 0; j < json.datapoints.length; j++){
 											this.historicalmeasurements[i][j] = json.datapoints[j][i];
 										}
 										break;
@@ -625,15 +627,15 @@ module.exports = function(homebridge) {
 							}
 							//Add filesystem writer to create persistent record of historical import
 							fs.file = path.join(os.homedir(),'.homebridge/history-already-imported.txt');
-							fileExists = fs.readFile(fs.file, function(error) {
-								this.log.debug("Persistence file does not exist")
+							var fileExists = fs.readFile(fs.file, function() {
+								this.log.debug("Persistence file does not exist");
 							}.bind(this));
 							
 							//Only run once (i.e. as long as persistence file doesn't exist)
 							if (!fileExists){
 
 								//Load historicals from API into Elgato
-								for (var i = 0; i < this.historicalmeasurements[0].length; i++){
+								for (let i = 0; i < this.historicalmeasurements[0].length; i++){
 									this.loggingService._addEntry({
 										time: this.historicalmeasurements[0][i],
 										temp: this.historicalmeasurements[2][i],
@@ -643,8 +645,8 @@ module.exports = function(homebridge) {
 								}
 
 								//touch filesystem to show this has already run once
-								fileContents = "Do not delete unless you want to re-import everything";
-								fs.writeFile(fs.file, fileContents, function(err, callback) {
+								var fileContents = "Do not delete unless you want to re-import everything";
+								fs.writeFile(fs.file, fileContents, function(err) {
 									if (err) throw err;
 									this.log.debug("Historical data imported");
 								}.bind(this));
@@ -725,7 +727,7 @@ module.exports = function(homebridge) {
 
 		getLockPhysicalControls: function(callback) {
 			this.getBlueAirSettings(function(){
-				if (this.appliance.child_lock == 0){
+				if (this.appliance.child_lock === "0"){
 					callback(null, Characteristic.LockPhysicalControls.CONTROL_LOCK_DISABLED);
 				} else {
 					callback(null, Characteristic.LockPhysicalControls.CONTROL_LOCK_ENABLED);
@@ -734,9 +736,9 @@ module.exports = function(homebridge) {
 		},
 
 		setLockPhysicalControls: function(state, callback) {
-			if(state == true){
+			if(state === 1){
 				this.LockState = 1;
-			} else if (state == false){
+			} else if (state === 0){
 				this.LockState = 0;
 			}
 
@@ -747,7 +749,7 @@ module.exports = function(homebridge) {
 				"defaultValue": this.LockState,
 				"name": "child_lock",
 				"uuid": this.deviceuuid
-			}
+			};
 
 			//Build POST request
 			var options = {
@@ -761,7 +763,7 @@ module.exports = function(homebridge) {
 			};
 
 			//Send request
-			this.httpRequest(options, function(error, response, body) {
+			this.httpRequest(options, function(error) {
 				if (error) {
 					this.log.debug('HTTP function failed: %s', error);
 					callback(error);
@@ -796,9 +798,9 @@ module.exports = function(homebridge) {
 
 		setTargetAirPurifierState: function(state, callback) {
 			//Set fan to auto turned on without a speed set
-			if(state == false){
+			if(state === 0){
 				this.targetPurifierState = 'manual';
-			} else if (state == true){
+			} else if (state === 1){
 				this.targetPurifierState = 'auto';
 			}
 
@@ -809,7 +811,7 @@ module.exports = function(homebridge) {
 				"defaultValue": this.targetPurifierState,
 				"name": "mode",
 				"uuid": this.deviceuuid
-			}
+			};
 
 			//Build POST request
 			var options = {
@@ -823,7 +825,7 @@ module.exports = function(homebridge) {
 			};
 
 			//Send request
-			this.httpRequest(options, function(error, response, body) {
+			this.httpRequest(options, function(error) {
 				if (error) {
 					this.log.debug('HTTP function failed: %s', error);
 					callback(error);
@@ -836,23 +838,23 @@ module.exports = function(homebridge) {
 
 		getActive: function(callback) {
 			this.getBlueAirSettings(function(){
-				if (this.appliance.fan_speed == 0){
+				if (this.appliance.fan_speed === "0"){
 					callback(null, Characteristic.Active.INACTIVE);
 				} else if (this.appliance.fan_speed >= 1 && this.appliance.fan_speed <= 3) {
 					callback(null, Characteristic.Active.ACTIVE);
 				} else {
-					callback(err);
+					callback();
 				}
 			}.bind(this));
 		},
 
 		setActive: function(state, callback) {
 			//Set fan to auto when turned on, else set fan_speed to 0
-			if (state == 1) {
+			if (state === 1) {
 				this.setTargetAirPurifierState(1, function(){
 					callback(null);
 				}.bind(this));
-			} else if (state == 0) {
+			} else if (state === 0) {
 
 				this.fanState = 0;
 
@@ -863,7 +865,7 @@ module.exports = function(homebridge) {
 					"defaultValue": this.fanState,
 					"name": "fan_speed",
 					"uuid": this.deviceuuid
-				}
+				};
 
 				//Build POST request
 				var options = {
@@ -877,7 +879,7 @@ module.exports = function(homebridge) {
 				};
 
 				//Send request
-				this.httpRequest(options, function(error, response, body) {
+				this.httpRequest(options, function(error) {
 					if (error) {
 						this.log.debug('HTTP function failed: %s', error);
 						callback(error);
@@ -897,16 +899,16 @@ module.exports = function(homebridge) {
 
 		getRotationSpeed: function(callback) {
 			this.getBlueAirSettings(function(){
-				if (this.appliance.fan_speed == 0){
+				if (this.appliance.fan_speed === "0"){
 					callback(null, 0);
-				} else if (this.appliance.fan_speed == 1) {
+				} else if (this.appliance.fan_speed === "1") {
 					callback(null, 33);
-				} else if (this.appliance.fan_speed == 2) {
+				} else if (this.appliance.fan_speed === "2") {
 					callback(null, 66);
-				}	else if (this.appliance.fan_speed == 3) {
+				}	else if (this.appliance.fan_speed === "3") {
 					callback(null, 100);
 				}	else {
-					callback(err);
+					callback();
 				}
 			}.bind(this));
 		},
@@ -935,7 +937,7 @@ module.exports = function(homebridge) {
 				"defaultValue": this.appliance.fan_speed,
 				"name": "fan_speed",
 				"uuid": this.deviceuuid
-			}
+			};
 
 			//Build POST request
 			var options = {
@@ -949,7 +951,7 @@ module.exports = function(homebridge) {
 			};
 
 			//Send request
-			this.httpRequest(options, function(error, response, body) {
+			this.httpRequest(options, function(error) {
 				if (error) {
 					this.log.debug('HTTP function failed: %s', error);
 					callback(error);
@@ -972,13 +974,13 @@ module.exports = function(homebridge) {
 
 		setLED: function(state, callback) {
 			//Set brightness last read value if turned on, set to 0 if off
-			if(state == true){
-				if(this.appliance.brightness != 0){
+			if(state === true){
+				if(this.appliance.brightness !== "0"){
 					this.LEDState = this.appliance.brightness;
 				} else {
 					this.LEDState = 4;
 				}
-			} else if (state == false){
+			} else if (state === false){
 				this.LEDState = 0;
 			}
 
@@ -989,7 +991,7 @@ module.exports = function(homebridge) {
 				"defaultValue": this.LEDState,
 				"name": "brightness",
 				"uuid": this.deviceuuid
-			}
+			};
 
 			//Build POST request
 			var options = {
@@ -1003,7 +1005,7 @@ module.exports = function(homebridge) {
 			};
 
 			//Send request
-			this.httpRequest(options, function(error, response, body) {
+			this.httpRequest(options, function(error) {
 				if (error) {
 					this.log.debug('HTTP function failed: %s', error);
 					callback(error);
@@ -1016,18 +1018,18 @@ module.exports = function(homebridge) {
 
 		getLEDBrightness: function(callback) {
 			this.getBlueAirSettings(function(){
-				if (this.appliance.brightness == 0){
+				if (this.appliance.brightness === "0"){
 					callback(null, 0);
-				} else if (this.appliance.brightness == 1) {
+				} else if (this.appliance.brightness === "1") {
 					callback(null, 25);
-				} else if (this.appliance.brightness == 2) {
+				} else if (this.appliance.brightness === "2") {
 					callback(null, 50);
-				}	else if (this.appliance.brightness == 3) {
+				}	else if (this.appliance.brightness === "3") {
 					callback(null, 75);
-				}	else if (this.appliance.brightness == 4) {
+				}	else if (this.appliance.brightness === "4") {
 					callback(null, 100);
 				} else {
-					callback(err);
+					callback();
 				}
 			}.bind(this));
 		},
@@ -1057,7 +1059,7 @@ module.exports = function(homebridge) {
 				"defaultValue": this.LEDState,
 				"name": "brightness",
 				"uuid": this.deviceuuid
-			}
+			};
 
 			//Build POST request
 			var options = {
@@ -1071,7 +1073,7 @@ module.exports = function(homebridge) {
 			};
 
 			//Send request
-			this.httpRequest(options, function(error, response, body) {
+			this.httpRequest(options, function(error) {
 				if (error) {
 					this.log.debug('HTTP function failed: %s', error);
 					callback(error);
@@ -1085,5 +1087,5 @@ module.exports = function(homebridge) {
 		getServices: function() {
 			return this.services;
 		}
-	}
+	};
 };
