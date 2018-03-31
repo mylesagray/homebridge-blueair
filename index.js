@@ -635,28 +635,28 @@ module.exports = function(homebridge) {
 								callback(null);
 							}
 
-							//Add filesystem writer to create persistent record of historical import
-							fs.file = "./"+hostname+"_"+this.name+'_persist.json';
+							// //Add filesystem writer to create persistent record of historical import
+							// fs.file = "./"+hostname+"_"+this.name+'_persist.json';
 
-							//Only run once (i.e. as long as persistence file doesn't exist)
-							if (fs.existsSync(fs.file) === false){
+							// //Only run once (i.e. as long as persistence file doesn't exist)
+							// if (fs.existsSync(fs.file) === false){
 								
-								//Load historicals from API into Elgato synchronously
+							// 	//Load historicals from API into Elgato synchronously
 
-								for (let i = 0; i < this.historicalmeasurements[0].length; i++){
-									this.loggingService.addEntry({
-										time: this.historicalmeasurements[0][i],
-										temp: this.historicalmeasurements[2][i],
-										humidity: this.historicalmeasurements[3][i],
-										ppm: this.historicalmeasurements[4][i]
-									});
-								}
+							// 	for (let i = 0; i < this.historicalmeasurements[0].length; i++){
+							// 		this.loggingService.addEntry({
+							// 			time: this.historicalmeasurements[0][i],
+							// 			temp: this.historicalmeasurements[2][i],
+							// 			humidity: this.historicalmeasurements[3][i],
+							// 			ppm: this.historicalmeasurements[4][i]
+							// 		});
+							// 	}
 
-							} else {
+							// } else {
 
-								this.log.debug("Historical import has previously run, not importing.");
+							// 	this.log.debug("Historical import has previously run, not importing.");
 
-							}
+							// }
 
 						}.bind(this));
 
