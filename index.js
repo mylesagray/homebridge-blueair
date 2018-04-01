@@ -222,9 +222,7 @@ module.exports = function(homebridge) {
 			//Fakegato-history masquerading as Eve Room.
 			//Stores history on local filesystem of homebridge appliance
 			this.loggingService = new FakeGatoHistoryService("room", this, {
-				size:10000,
-				storage:'fs',
-				disableTimer:true
+				storage:'fs'
 			});
 			this.services.push(this.loggingService);
 		}
