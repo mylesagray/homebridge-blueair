@@ -58,7 +58,6 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
     "nameHumidity": "Humidity", //optional
     "nameCO2": "Carbon Dioxide", //optional
     "username": "{BlueAir-Email}",
-    "apikey": "{BlueAir-API-Key-Here}", //how this is retrieved without an API proxy is not yet clear
     "password": "{BlueAir-Password}",
     "showTemperature": true, //show temp sensor
     "showHumidity": true, //show humidity sensor

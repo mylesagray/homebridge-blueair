@@ -6,7 +6,6 @@
     "nameHumidity": "Humidity",
     "nameCO2": "Carbon Dioxide",
     "username": "{BlueAir-Email}",
-    "apikey": "{BlueAir-API-Key-Here}",
     "password": "{BlueAir-Password}",
     "showTemperature": true,
     "showHumidity": true,

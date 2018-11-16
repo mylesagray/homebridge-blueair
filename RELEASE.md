@@ -1,4 +1,8 @@
 # release notes
+## v0.1.3
+* Added support for sensorless models
+* Hardcoded API key as it is globally shared
+
 ## v0.1.2
 * Moved logging to debug only mode
 * Updated readme
