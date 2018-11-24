@@ -65,9 +65,7 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
     "showCO2": true, //show CO2 sensor
     "getHistoricalStats": true //enable historical logging in Eve.app
 }
-
 ```
-
 
 ## Releases
 See [RELEASE.md](https://github.com/mylesgray/homebridge-blueair/blob/master/RELEASE.md)
