@@ -1,6 +1,7 @@
   {
     "accessory": "BlueAir",
     "name": "BlueAir 680i",
+    "airPurifierIndex": 0,
     "nameAirQuality": "Air Quality",
     "nameTemperature": "Temperature",
     "nameHumidity": "Humidity",

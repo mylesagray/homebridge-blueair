@@ -53,6 +53,7 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
   {
     "accessory": "BlueAir",
     "name": "BlueAir 680i",
+    "airPurifierIndex": 0, //optional if you have multiple air purifiers
     "nameAirQuality": "Air Quality", //optional
     "nameTemperature": "Temperature", //optional
     "nameHumidity": "Humidity", //optional

@@ -1,4 +1,7 @@
 # release notes
+## v0.4.0
+* Added support for multiple air purifiers using the airPurifierIndex config option.
+
 ## v0.3.2
 * Added support for sensorless models
 * Hardcoded API key as it is globally shared
