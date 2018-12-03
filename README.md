@@ -1,6 +1,8 @@
 [![npm](https://img.shields.io/npm/v/homebridge-blueair.svg)](https://www.npmjs.com/package/homebridge-blueair)
 [![GitHub last commit](https://img.shields.io/github/last-commit/mylesgray/homebridge-blueair.svg)](https://github.com/mylesgray/homebridge-blueair)
 
+Like this? I don't care much for beer, but coffee is bitchin' [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.me/mylesgray)
+
 # homebridge-blueair
 This is a [homebridge](https://github.com/nfarina/homebridge) plugin which lets you integrate your non-HomeKit [BlueAir](https://www.blueair.com/gb/air-purifiers) air purifier into HomeKit.
 
@@ -88,7 +90,3 @@ You need to create a Postman Environment with the following variables in it to u
 This plugin is heavily based on (hacked together from) two other plugins, [homebridge-efergy](https://github.com/luc-ass/homebridge-efergy) and [homebridge-mi-air-purifier](https://github.com/seikan/homebridge-mi-air-purifier), without these plugins I could not have created the foundation on which this was built. Thanks to @luc-ass and @seikan for their work on these.
 
 The [fakegato-history](https://github.com/simont77/fakegato-history) plugin on which this is based was built by @simont77, without this, we wouldn't have pretty graphs to gawk at.
-
-## What else
-
-Like this? I don't care much for beer, but coffee is bitchin' [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.me/mylesgray)
