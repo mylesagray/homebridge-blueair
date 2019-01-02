@@ -18,6 +18,14 @@ module.exports = function(homebridge) {
 	homebridge.registerAccessory("homebridge-blueair", "BlueAir", BlueAir);
 	
 	function BlueAir(log, config) {
+		function boolValueWithDefault(value, defaultValue) {
+			if (value === undefined) {
+				return defaultValue;
+			} else {
+				return value;
+			}
+		}
+
 		this.log = log;
 		this.username = config.username;
 		this.apikey = "eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoiYmx1ZWFpciIsImlhdCI6MTQ1MzEyNTYzMiwidmFsaWRpdHkiOi0xLCJqdGkiOiJkNmY3OGE0Yi1iMWNkLTRkZDgtOTA2Yi1kN2JkNzM0MTQ2NzQiLCJwZXJtaXNzaW9ucyI6WyJhbGwiXSwicXVvdGEiOi0xLCJyYXRlTGltaXQiOi0xfQ.CJsfWVzFKKDDA6rWdh-hjVVVE9S3d6Hu9BzXG9htWFw";
@@ -32,12 +40,12 @@ module.exports = function(homebridge) {
 		this.nameTemperature = config.nameTemperature || 'Temperature';
 		this.nameHumidity = config.nameHumidity || 'Humidity';
 		this.nameCO2 = config.nameCO2 || 'CO2';
-		this.showAirQuality = config.showAirQuality || false;
-		this.showTemperature = config.showTemperature || false;
-		this.showHumidity = config.showHumidity || false;
-		this.showCO2 = config.showCO2 || false;
-		this.getHistoricalStats = config.getHistoricalStats || false;
-		this.showLED = config.showLED || true;
+		this.showAirQuality = boolValueWithDefault(config.showAirQuality, false);
+		this.showTemperature = boolValueWithDefault(config.showTemperature, false);
+		this.showHumidity = boolValueWithDefault(config.showHumidity, false);
+		this.showCO2 = boolValueWithDefault(config.showCO2, false);
+		this.getHistoricalStats = boolValueWithDefault(config.getHistoricalStats, false);
+		this.showLED = boolValueWithDefault(config.showLED, true);
 		
 		this.base_API_url = "https://api.foobot.io/v2/user/" + this.username + "/homehost/";
 		
