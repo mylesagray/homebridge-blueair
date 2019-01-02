@@ -37,6 +37,7 @@ module.exports = function(homebridge) {
 		this.showHumidity = config.showHumidity || false;
 		this.showCO2 = config.showCO2 || false;
 		this.getHistoricalStats = config.getHistoricalStats || false;
+		this.showLED = config.showLED || true;
 		
 		this.base_API_url = "https://api.foobot.io/v2/user/" + this.username + "/homehost/";
 		
@@ -95,22 +96,24 @@ module.exports = function(homebridge) {
 		this.services.push(this.service);
 		this.services.push(this.serviceInfo);
 		
-		//Register the Lightbulb service (LED / Display)
-		this.lightBulbService = new Service.Lightbulb(this.name + " LED");
-		
-		this.lightBulbService
-		.getCharacteristic(Characteristic.On)
-		.on('get', this.getLED.bind(this))
-		.on('set', this.setLED.bind(this))
-		.getDefaultValue();
-		
-		this.lightBulbService
-		.getCharacteristic(Characteristic.Brightness)
-		.on('get', this.getLEDBrightness.bind(this))
-		.on('set', this.setLEDBrightness.bind(this))
-		.getDefaultValue();
-		
-		this.services.push(this.lightBulbService);
+		if (this.showLED) {
+			//Register the Lightbulb service (LED / Display)
+			this.lightBulbService = new Service.Lightbulb(this.name + " LED");
+			
+			this.lightBulbService
+			.getCharacteristic(Characteristic.On)
+			.on('get', this.getLED.bind(this))
+			.on('set', this.setLED.bind(this))
+			.getDefaultValue();
+			
+			this.lightBulbService
+			.getCharacteristic(Characteristic.Brightness)
+			.on('get', this.getLEDBrightness.bind(this))
+			.on('set', this.setLEDBrightness.bind(this))
+			.getDefaultValue();
+			
+			this.services.push(this.lightBulbService);
+		}
 		
 		//Register the Filer Maitenance service
 		this.filterMaintenanceService = new Service.FilterMaintenance(this.name + " Filter");

@@ -66,6 +66,7 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
     "showHumidity": true, //show humidity sensor
     "showAirQuality": true, //show air quality sensor
     "showCO2": true, //show CO2 sensor
+    "showLED": true, //register the air purifier's LED as a lightbulb service
     "getHistoricalStats": true //enable historical logging in Eve.app
 }
 ```
