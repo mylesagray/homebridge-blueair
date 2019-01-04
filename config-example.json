@@ -12,5 +12,6 @@
     "showHumidity": true,
     "showAirQuality": true,
     "showCO2": true,
+    "showLED": true,
     "getHistoricalStats": true
 }
