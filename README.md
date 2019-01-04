@@ -72,7 +72,7 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
 ```
 
 ## Releases
-See [RELEASE.md](https://github.com/mylesgray/homebridge-blueair/blob/master/RELEASE.md)
+See [CHANGELOG.md](https://github.com/mylesgray/homebridge-blueair/blob/master/CHANGELOG.md)
 
 ## To-dos
 See [open enhancement issues](https://github.com/mylesgray/homebridge-blueair/labels/enhancement)
