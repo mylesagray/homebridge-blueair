@@ -1,5 +1,9 @@
 # release notes
 
+## v0.4.2
+
+* Added JSON checking before attempting to parse to ensure non-JSON responses don't crash.
+
 ## v0.4.1
 
 * LED now optional and can be specified in config with `showLED: true` - PR #18

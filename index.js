@@ -25,7 +25,7 @@ module.exports = function(homebridge) {
 				return value;
 			}
 		}
-
+		
 		this.log = log;
 		this.username = config.username;
 		this.apikey = "eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoiYmx1ZWFpciIsImlhdCI6MTQ1MzEyNTYzMiwidmFsaWRpdHkiOi0xLCJqdGkiOiJkNmY3OGE0Yi1iMWNkLTRkZDgtOTA2Yi1kN2JkNzM0MTQ2NzQiLCJwZXJtaXNzaW9ucyI6WyJhbGwiXSwicXVvdGEiOi0xLCJyYXRlTGltaXQiOi0xfQ.CJsfWVzFKKDDA6rWdh-hjVVVE9S3d6Hu9BzXG9htWFw";
@@ -247,6 +247,23 @@ module.exports = function(homebridge) {
 	
 	BlueAir.prototype = {
 		
+		tryParseJSON: function(jsonString){
+			try {
+				var o = JSON.parse(jsonString);
+				
+				// Handle non-exception-throwing cases:
+				// Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
+				// but... JSON.parse(null) returns null, and typeof null === "object", 
+				// so we must check for that, too. Thankfully, null is falsey, so this suffices:
+				if (o && typeof o === "object") {
+					return o;
+				}
+			}
+			catch (e) { }
+			
+			return false;
+		},
+		
 		getAllState: function(){
 			if (this.deviceuuid !== 'undefined'){
 				this.getBlueAirSettings(function(){});
@@ -283,10 +300,9 @@ module.exports = function(homebridge) {
 							callback(error);
 						}
 						else {
-							var json = JSON.parse(body);
-							this.log.debug("Got home region:", json);
+							this.log.debug("Got home region:", body);
 							this.gothomehost = 1;
-							this.homehost = json;
+							this.homehost = body.replace(/['"]+/g, '');
 							callback(null);
 						}
 					}.bind(this));
@@ -347,7 +363,7 @@ module.exports = function(homebridge) {
 								callback(error);
 							}
 							else {
-								var json = JSON.parse(body);
+								var json = this.tryParseJSON(body);
 								var numberofdevices = '';
 								if (this.airPurifierIndex < json.length) {
 									this.deviceuuid = json[this.airPurifierIndex].uuid;
@@ -392,7 +408,7 @@ module.exports = function(homebridge) {
 										callback(error);
 									}
 									else {
-										var json = JSON.parse(body);
+										var json = this.tryParseJSON(body);
 										this.appliance = json.reduce(function(obj, prop) {
 											obj[prop.name] = prop.currentValue;
 											return obj;
@@ -439,7 +455,7 @@ module.exports = function(homebridge) {
 										callback(error);
 									}
 									else {
-										var json = JSON.parse(body);
+										var json = this.tryParseJSON(body);
 										this.appliance.info = json;
 										this.log.debug("Got device info");
 										var filterusageindays = Math.round(((this.appliance.info.initUsagePeriod/60)/60)/24);
@@ -487,7 +503,7 @@ module.exports = function(homebridge) {
 									}
 									else {
 										this.measurements = {};
-										var json = JSON.parse(body);
+										var json = this.tryParseJSON(body);
 										this.lastSensorRefresh = new Date();
 										
 										if (json.datapoints.length >= 1)
@@ -608,7 +624,7 @@ module.exports = function(homebridge) {
 									}
 									else {
 										
-										var json = JSON.parse(body);
+										var json = this.tryParseJSON(body);
 										this.log.debug("Downloaded " + json.datapoints.length + " datapoints for " + json.sensors.length + " senors");
 										
 										if (json.datapoints.length >= 1)

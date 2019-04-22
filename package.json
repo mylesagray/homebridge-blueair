@@ -1,6 +1,6 @@
 {
   "name": "homebridge-blueair",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "BlueAir plugin for homebridge: https://github.com/nfarina/homebridge",
   "license": "ISC",
   "keywords": [
@@ -18,7 +18,7 @@
     "homebridge": ">=0.3.1"
   },
   "dependencies": {
-    "fakegato-history": "^0.4.3",
+    "fakegato-history": "^0.5.3",
     "request": "^2.88.0",
     "util": "^0.11.1"
   },
