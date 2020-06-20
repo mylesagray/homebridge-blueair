@@ -68,6 +68,32 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
     "showCO2": true, //show CO2 sensor
     "showLED": true, //register the air purifier's LED as a lightbulb service
     "getHistoricalStats": true //enable historical logging in Eve.app
+},
+{
+    "accessory": "BlueAir",
+    "name": "BlueAir Sense",
+    "airPurifierIndex": 1, //optional if you have multiple air purifiers
+    "purifierOnly": true, //must be true for Sense+ device
+    "username": "{BlueAir-Email}",
+    "password": "{BlueAir-Password}"
+    "showLED": true //register the air purifier's LED as a lightbulb service
+},
+{
+    "accessory": "BlueAir",
+    "name": "BlueAir Aware",
+    "airPurifierIndex": 2, //optional if you have multiple air purifiers
+    "nameAirQuality": "Air Quality", //optional
+    "nameTemperature": "Temperature", //optional
+    "nameHumidity": "Humidity", //optional
+    "nameCO2": "Carbon Dioxide", //optional
+    "username": "{BlueAir-Email}",
+    "password": "{BlueAir-Password}",
+    "showTemperature": true, //show temp sensor
+    "showHumidity": true, //show humidity sensor
+    "showAirQuality": true, //show air quality sensor
+    "showCO2": true, //show CO2 sensor
+    "showLED": false, //Aware's LED not supported
+    "getHistoricalStats": true //enable historical logging in Eve.app
 }
 ```
 
