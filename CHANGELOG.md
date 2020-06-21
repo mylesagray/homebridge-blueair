@@ -1,5 +1,9 @@
 # release notes
 
+## v0.5.0
+
+* Added Sense and Aware support.
+
 ## v0.4.2
 
 * Added JSON checking before attempting to parse to ensure non-JSON responses don't crash.
