@@ -72,7 +72,7 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
 {
     "accessory": "BlueAir",
     "name": "BlueAir Sense",
-    "airPurifierIndex": 1, //optional if you have multiple air purifiers
+    "airPurifierIndex": 1, //optional, should match your actuall device order
     "purifierOnly": true, //must be true for Sense+ device
     "username": "{BlueAir-Email}",
     "password": "{BlueAir-Password}"
@@ -81,7 +81,8 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
 {
     "accessory": "BlueAir",
     "name": "BlueAir Aware",
-    "airPurifierIndex": 2, //optional if you have multiple air purifiers
+    "airPurifierIndex": 2, //optional, should match your actuall device order
+    "sensorOnly": true, //must be true for Aware device
     "nameAirQuality": "Air Quality", //optional
     "nameTemperature": "Temperature", //optional
     "nameHumidity": "Humidity", //optional
@@ -92,7 +93,6 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
     "showHumidity": true, //show humidity sensor
     "showAirQuality": true, //show air quality sensor
     "showCO2": true, //show CO2 sensor
-    "showLED": false, //Aware's LED not supported
     "getHistoricalStats": true //enable historical logging in Eve.app
 }
 ```
