@@ -124,7 +124,7 @@ module.exports = function(homebridge) {
 		
 		this.services.push(this.serviceInfo);
 		
-		if (this.showLED) {
+		if (!this.sensorOnly && this.showLED) {
 			//Register the Lightbulb service (LED / Display)
 			this.lightBulbService = new Service.Lightbulb(this.name + " LED");
 			
@@ -143,7 +143,7 @@ module.exports = function(homebridge) {
 			this.services.push(this.lightBulbService);
 		}
 		
-		if(this.showAirQuality){
+		if(!this.purifierOnly && this.showAirQuality){
 			this.airQualitySensorService = new Service.AirQualitySensor(this.nameAirQuality);
 			
 			this.airQualitySensorService
@@ -172,7 +172,7 @@ module.exports = function(homebridge) {
 			this.services.push(this.airQualitySensorService);
 		}
 		
-		if(this.showTemperature){
+		if(!this.purifierOnly && this.showTemperature){
 			this.temperatureSensorService = new Service.TemperatureSensor(this.nameTemperature);
 			
 			this.temperatureSensorService
@@ -183,7 +183,7 @@ module.exports = function(homebridge) {
 			this.services.push(this.temperatureSensorService);
 		}
 		
-		if(this.showHumidity){
+		if(!this.purifierOnly && this.showHumidity){
 			this.humiditySensorService = new Service.HumiditySensor(this.nameHumidity);
 			
 			this.humiditySensorService
@@ -194,7 +194,7 @@ module.exports = function(homebridge) {
 			this.services.push(this.humiditySensorService);
 		}
 		
-		if(this.showCO2){
+		if(!this.purifierOnly && this.showCO2){
 			this.CO2SensorService = new Service.CarbonDioxideSensor(this.nameCO2);
 			
 			this.CO2SensorService
@@ -215,7 +215,7 @@ module.exports = function(homebridge) {
 			this.services.push(this.CO2SensorService);
 		}
 		
-		if(this.getHistoricalStats){
+		if(!this.purifierOnly && this.getHistoricalStats){
 			//Start fakegato-history custom charactaristic (Air Quality PPM charactaristic)
 			CustomCharacteristic.AirQualCO2 = function() {
 				Characteristic.call(this, 'Air Quality PM25', 'E863F10B-079E-48FF-8F27-9C2605A29F52');
@@ -271,8 +271,8 @@ module.exports = function(homebridge) {
 		
 		getAllState: function(){
 			if (this.deviceuuid !== 'undefined'){
-				this.getBlueAirSettings(function(){});
 				if(!this.sensorOnly)
+				this.getBlueAirSettings(function(){});
 				this.getBlueAirInfo(function(){});
 				if(!this.purifierOnly)
 				this.getLatestValues(function(){});
