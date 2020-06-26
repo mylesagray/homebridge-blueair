@@ -1,5 +1,9 @@
 # release notes
 
+## v0.5.1
+
+* Added auto configuration of supported elements of each purifier type.
+
 ## v0.5.0
 
 * Added Sense and Aware support.

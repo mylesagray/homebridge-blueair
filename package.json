@@ -1,6 +1,6 @@
 {
   "name": "homebridge-blueair",
-  "version": "0.4.2",
+  "version": "0.5.1",
   "description": "BlueAir plugin for homebridge: https://github.com/nfarina/homebridge",
   "license": "ISC",
   "keywords": [
