@@ -52,6 +52,7 @@ An explaination of the config is below, a `config-example.json` is also provided
 For instructions on how to retrieve your apikey [see here](https://github.com/mylesgray/homebridge-blueair/wiki/API_Key).
 
 ```
+/// i-Series
   {
     "accessory": "BlueAir",
     "name": "BlueAir 680i",
@@ -69,19 +70,25 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
     "showLED": true, //register the air purifier's LED as a lightbulb service
     "getHistoricalStats": true //enable historical logging in Eve.app
 },
+
+/// Classic Series or Sense
+
 {
     "accessory": "BlueAir",
     "name": "BlueAir Sense",
-    "airPurifierIndex": 1, //optional, should match your actuall device order
-    "purifierOnly": true, //must be true for Sense+ device
+    "airPurifierIndex": 1, //optional, should match your actual device order
+    "purifierOnly": true, //must be true for Classic/Sense+ device
     "username": "{BlueAir-Email}",
     "password": "{BlueAir-Password}"
     "showLED": true //register the air purifier's LED as a lightbulb service
 },
+
+/// Aware
+
 {
     "accessory": "BlueAir",
     "name": "BlueAir Aware",
-    "airPurifierIndex": 2, //optional, should match your actuall device order
+    "airPurifierIndex": 2, //optional, should match your actual device order
     "sensorOnly": true, //must be true for Aware device
     "nameAirQuality": "Air Quality", //optional
     "nameTemperature": "Temperature", //optional
