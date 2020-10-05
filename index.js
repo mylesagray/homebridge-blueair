@@ -372,8 +372,8 @@ module.exports = function(homebridge) {
 							else {
 								var json = this.tryParseJSON(body);
 								var numberofdevices = '';
-								this.deviceuuid = json[this.airPurifierIndex].uuid;
-								this.devicename = json[this.airPurifierIndex].name;
+								this.deviceuuid = json.uuid;
+								this.devicename = json.name;
 								this.havedeviceID = 1;
 								this.log.debug("Got device ID"); 
 								callback(null);
