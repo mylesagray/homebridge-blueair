@@ -1,5 +1,9 @@
 # release notes
 
+## v0.5.2
+
+* Bugfix for BlueAir API change
+
 ## v0.5.1
 
 * Added auto configuration of supported elements of each purifier type.

@@ -372,15 +372,11 @@ module.exports = function(homebridge) {
 							else {
 								var json = this.tryParseJSON(body);
 								var numberofdevices = '';
-								if (this.airPurifierIndex < json.length) {
-									this.deviceuuid = json[this.airPurifierIndex].uuid;
-									this.devicename = json[this.airPurifierIndex].name;
-									this.havedeviceID = 1;
-									this.log.debug("Got device ID"); 
-									callback(null);
-								} else {
-									this.log.debug("airPurifierIndex specified is higher than number of air purifiers available");
-								}
+								this.deviceuuid = json[this.airPurifierIndex].uuid;
+								this.devicename = json[this.airPurifierIndex].name;
+								this.havedeviceID = 1;
+								this.log.debug("Got device ID"); 
+								callback(null);
 							}
 						}.bind(this));
 					}.bind(this));
