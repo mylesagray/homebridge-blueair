@@ -49,7 +49,7 @@ module.exports = function(homebridge) {
 		this.getHistoricalStats = boolValueWithDefault(config.getHistoricalStats, false);
 		this.showLED = boolValueWithDefault(config.showLED, true);
 		
-		this.base_API_url = "https://api.foobot.io/v2/user/" + this.username + "/homehost/";
+		this.base_API_url = "https://api.blueair.io/v2/user/" + this.username + "/homehost/";
 		
 		this.services = [];
 		
@@ -372,8 +372,8 @@ module.exports = function(homebridge) {
 							else {
 								var json = this.tryParseJSON(body);
 								var numberofdevices = '';
-								this.deviceuuid = json.uuid;
-								this.devicename = json.name;
+								this.deviceuuid = json[airPurifierIndex].uuid;
+								this.devicename = json[airPurifierIndex].name;
 								this.havedeviceID = 1;
 								this.log.debug("Got device ID"); 
 								callback(null);

@@ -1,5 +1,9 @@
 # release notes
 
+## v0.5.4
+
+* Updated blueair API and added back in multi-purifier support
+
 ## v0.5.3
 
 * Temporary removal of multi-purifier support because of API changes
