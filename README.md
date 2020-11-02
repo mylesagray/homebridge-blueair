@@ -56,13 +56,13 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
   {
     "accessory": "BlueAir",
     "name": "BlueAir 680i",
-    "airPurifierIndex": 0, //optional if you have multiple air purifiers
+    "airPurifierIndex": "0", //optional if you have multiple air purifiers
     "nameAirQuality": "Air Quality", //optional
     "nameTemperature": "Temperature", //optional
     "nameHumidity": "Humidity", //optional
     "nameCO2": "Carbon Dioxide", //optional
-    "username": "{BlueAir-Email}",
-    "password": "{BlueAir-Password}",
+    "username": "BlueAir-Email",
+    "password": "BlueAir-Password",
     "showTemperature": true, //show temp sensor
     "showHumidity": true, //show humidity sensor
     "showAirQuality": true, //show air quality sensor
@@ -76,10 +76,10 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
 {
     "accessory": "BlueAir",
     "name": "BlueAir Sense",
-    "airPurifierIndex": 1, //optional, should match your actual device order
+    "airPurifierIndex": "1", //optional, should match your actual device order
     "purifierOnly": true, //must be true for Classic/Sense+ device
-    "username": "{BlueAir-Email}",
-    "password": "{BlueAir-Password}"
+    "username": "BlueAir-Email",
+    "password": "BlueAir-Password"
     "showLED": true //register the air purifier's LED as a lightbulb service
 },
 
@@ -88,14 +88,14 @@ For instructions on how to retrieve your apikey [see here](https://github.com/my
 {
     "accessory": "BlueAir",
     "name": "BlueAir Aware",
-    "airPurifierIndex": 2, //optional, should match your actual device order
+    "airPurifierIndex": "2", //optional, should match your actual device order
     "sensorOnly": true, //must be true for Aware device
     "nameAirQuality": "Air Quality", //optional
     "nameTemperature": "Temperature", //optional
     "nameHumidity": "Humidity", //optional
     "nameCO2": "Carbon Dioxide", //optional
-    "username": "{BlueAir-Email}",
-    "password": "{BlueAir-Password}",
+    "username": "BlueAir-Email",
+    "password": "BlueAir-Password",
     "showTemperature": true, //show temp sensor
     "showHumidity": true, //show humidity sensor
     "showAirQuality": true, //show air quality sensor
