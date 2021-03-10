@@ -161,13 +161,6 @@ module.exports = function(homebridge) {
 			.on('get', this.getVOCDensity.bind(this))
 			.getDefaultValue();
 			
-			this.airQualitySensorService
-			.getCharacteristic(Characteristic.CarbonDioxideLevel)
-			.on('get', this.getCO2.bind(this))
-			.getDefaultValue();
-			
-			this.airQualitySensorService
-			.setCharacteristic(Characteristic.AirParticulateSize, '2.5um');
 			
 			this.services.push(this.airQualitySensorService);
 		}
