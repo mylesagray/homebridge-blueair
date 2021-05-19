@@ -117,7 +117,7 @@ There is no documented API for the BlueAir devices, through some API proxying wi
 I coallated all requests that my device made into an easy-to-use [Postman collection](https://www.getpostman.com/collections/1a8ff6c577e58a7b6f90).
 
 You need to create a Postman Environment with the following variables in it to use the collection:
-![Postman Environment](https://dl.dropboxusercontent.com/s/yu3lz7r47pe00ex/Screenshot%202018-03-04%2015.06.10.png?dl=0)
+![Postman Environment](https://dl.dropbox.com/s/ogzizxgz1rpyhen/Screenshot%202021-05-19%20at%2012.04.25.png)
 
 ## Thanks
 
