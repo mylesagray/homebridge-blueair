@@ -3,6 +3,10 @@
 
 # This plugin is not actively maintained, I no longer own a BlueAir and cannot fix issues - Repo is up for adoption.
 
+## An alternative plugin
+
+Fraser has done a great job on a new dynamic, platform based plugin that was based on this foundation - please give his a try as an alternative! [fjs21/homebridge-blueair](https://github.com/fjs21/homebridge-blueair)
+
 ## homebridge-blueair
 This is a [homebridge](https://github.com/nfarina/homebridge) plugin which lets you integrate your non-HomeKit [BlueAir](https://www.blueair.com/gb/air-purifiers) air purifier into HomeKit.
 
